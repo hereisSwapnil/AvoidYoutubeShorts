@@ -14,8 +14,8 @@ AvoidYoutubeShorts is a Chrome extension that helps you block or avoid YouTube S
 
 ## Installation
 
-1. Clone or download this repository.
-
-   ```bash
-   git clone https://github.com/Swapnil-Singh-99/AvoidYoutubeShorts.git
-   ```
+1. Download repository as a .zip file using git or [you can download directly]().
+2. Go to the chrome-specific url: chrome://extensions
+3. Make sure developer mode is enabled. If not, you can switch it on using the "slider" at the top right corner.
+4. Once developer mode is confirmed to be on, you can press "load more." This will open a file selector. You can then navigate to the root folder of the program. Once done, it should be enabled as well as working.
+5. You are all good to go!

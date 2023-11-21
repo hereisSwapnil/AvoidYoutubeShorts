@@ -1,0 +1,18 @@
+ytd-video-renderer:has(a[href*="/shorts/"]),
+ytd-reel-shelf-renderer:has(a[href*="/shorts/"]),
+ytd-rich-section-renderer:has(a[href*="/shorts/"]),
+ytd-shorts:has(div[id="shorts-container"]),
+ytd-guide-entry-renderer:has(a[title="Shorts"]) {
+  visibility: hidden !important;
+  display: none !important;
+}
+
+.noShorts {
+  position: absolute;
+  color: white;
+  z-index: 100000;
+  top: 50%;
+  left: 50%;
+  font-size: 100px;
+  transform: translate(-50%, -50%);
+}

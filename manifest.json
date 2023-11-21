@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Avoid YT Shorts",
+  "version": "1.0",
+  "description": "Avoid YouTube Shorts and concentrate",
+  "permissions": ["activeTab", "tabs"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "css": ["script.css"]
+    },
+    {
+      "matches": ["https://www.youtube.com/shorts*"],
+      "css": ["script.css"],
+      "js": ["content.js"]
+    }
+  ]
+}

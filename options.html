@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avoid YT Shorts - Settings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.8;
+            font-weight: 500;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .setting {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px 0;
+        }
+
+        .setting:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-label {
+            flex: 1;
+        }
+
+        .setting-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .setting-description {
+            font-size: 14px;
+            opacity: 0.7;
+            line-height: 1.4;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: rgba(76, 175, 80, 0.8);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(26px);
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(5px);
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn.danger {
+            background: rgba(255, 107, 107, 0.3);
+            border-color: rgba(255, 107, 107, 0.5);
+        }
+
+        .btn.danger:hover {
+            background: rgba(255, 107, 107, 0.4);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .save-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .save-indicator.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚫 Avoid YT Shorts</h1>
+            <p>Enhanced Version 2.0.0 - Settings</p>
+        </div>
+
+        <div class="section">
+            <h2>⚙️ General Settings</h2>
+            
+            <div class="setting">
+                <div class="setting-label">
+                    <div class="setting-title">Enable Shorts Blocker</div>
+                    <div class="setting-description">Turn the extension on or off completely</div>
+                </div>
+                <div class="toggle-switch active" id="enabled-toggle"></div>
+            </div>
+
+            <div class="setting">
+                <div class="setting-label">
+                    <div class="setting-title">Show UI Panel</div>
+                    <div class="setting-description">Display the statistics panel on YouTube</div>
+                </div>
+                <div class="toggle-switch active" id="show-ui-toggle"></div>
+            </div>
+
+            <div class="setting">
+                <div class="setting-label">
+                    <div class="setting-title">Enable Notifications</div>
+                    <div class="setting-description">Show notifications for important events</div>
+                </div>
+                <div class="toggle-switch active" id="notifications-toggle"></div>
+            </div>
+
+            <div class="setting">
+                <div class="setting-label">
+                    <div class="setting-title">Auto-pause on Focus</div>
+                    <div class="setting-description">Automatically pause when you're actively browsing</div>
+                </div>
+                <div class="toggle-switch" id="auto-pause-toggle"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-blocked">0</div>
+                    <div class="stat-label">Total Shorts Blocked</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="time-saved">0h</div>
+                    <div class="stat-label">Time Saved</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="install-date">-</div>
+                    <div class="stat-label">Install Date</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button class="btn danger" id="reset-stats-btn">Reset All Statistics</button>
+                <button class="btn" id="export-stats-btn">Export Statistics</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Actions</h2>
+            <button class="btn" id="refresh-all-btn">Refresh All YouTube Tabs</button>
+            <button class="btn" id="test-notification-btn">Test Notification</button>
+        </div>
+
+        <div class="footer">
+            <p>Stay focused on meaningful content! 📚</p>
+            <p>Made with ❤️ for productivity</p>
+        </div>
+    </div>
+
+    <div class="save-indicator" id="save-indicator">
+        Settings saved! ✅
+    </div>
+
+    <script src="options.js"></script>
+</body>
+</html> 

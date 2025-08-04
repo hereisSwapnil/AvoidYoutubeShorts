@@ -1,18 +1,418 @@
-ytd-video-renderer:has(a[href*="/shorts/"]),
-ytd-reel-shelf-renderer:has(a[href*="/shorts/"]),
-ytd-rich-section-renderer:has(a[href*="/shorts/"]),
-ytd-shorts:has(div[id="shorts-container"]),
-ytd-guide-entry-renderer:has(a[title="Shorts"]) {
-  visibility: hidden !important;
-  display: none !important;
+/* Enhanced YouTube Shorts Blocker Styles */
+
+/* Hide YouTube Shorts content - Effective selectors (only when blocker is enabled) */
+.shorts-blocker-enabled ytd-video-renderer:has(a[href*="/shorts/"]),
+.shorts-blocker-enabled ytd-reel-shelf-renderer:has(a[href*="/shorts/"]),
+.shorts-blocker-enabled ytd-shorts:has(div[id="shorts-container"]),
+.shorts-blocker-enabled ytd-guide-entry-renderer:has(a[title="Shorts"]),
+.shorts-blocker-enabled ytd-mini-guide-entry-renderer:has(a[title="Shorts"]) {
+    visibility: hidden !important;
+    display: none !important;
 }
 
-.noShorts {
-  position: absolute;
-  color: white;
-  z-index: 100000;
-  top: 50%;
-  left: 50%;
-  font-size: 100px;
-  transform: translate(-50%, -50%);
+/* Hide individual shorts in sections without hiding entire sections (only when blocker is enabled) */
+.shorts-blocker-enabled ytd-rich-section-renderer ytd-rich-item-renderer:has(a[href*="/shorts/"]),
+.shorts-blocker-enabled ytd-rich-section-renderer ytd-compact-video-renderer:has(a[href*="/shorts/"]),
+.shorts-blocker-enabled ytd-rich-section-renderer ytd-grid-video-renderer:has(a[href*="/shorts/"]) {
+    visibility: hidden !important;
+    display: none !important;
+}
+
+/* Enhanced Draggable Logo UI Styles */
+#shorts-blocker-ui {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000000;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    pointer-events: none;
+}
+
+.shorts-blocker-container {
+    position: relative;
+    pointer-events: all;
+    cursor: grab;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.shorts-blocker-container:active {
+    cursor: grabbing;
+}
+
+.shorts-blocker-container.dragging {
+    cursor: grabbing !important;
+    transform: scale(1.05);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.shorts-blocker-container.dragging .shorts-blocker-logo {
+    border-color: rgba(255, 255, 255, 0.8);
+    border-width: 3px;
+}
+
+/* Side indicators */
+.shorts-blocker-container.on-left-side {
+    transform-origin: left center;
+}
+
+.shorts-blocker-container.on-right-side {
+    transform-origin: right center;
+}
+
+/* Snap animation */
+@keyframes snapToSide {
+    0% {
+        transform: scale(1.05);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.shorts-blocker-container.snapping {
+    animation: snapToSide 0.3s ease-out;
+}
+
+/* Logo State (Default) */
+.shorts-blocker-logo {
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border: 2px dashed rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 2;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.shorts-blocker-logo:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.logo-icon {
+    font-size: 24px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    transition: all 0.3s ease;
+}
+
+/* Expanded State */
+.shorts-blocker-expanded {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 280px;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.8) translateX(20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+}
+
+/* Hover State - Show Expanded Content */
+.shorts-blocker-container:hover .shorts-blocker-expanded {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1) translateX(0);
+}
+
+.shorts-blocker-container:hover .shorts-blocker-logo {
+    transform: scale(1.05);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.35);
+}
+
+.shorts-blocker-container:hover .logo-icon {
+    transform: scale(1.1);
+}
+
+/* Header Styles */
+.shorts-blocker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.header-left h2 {
+    color: white;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.shorts-blocker-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(5px);
+}
+
+.shorts-blocker-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+.shorts-blocker-btn.paused {
+    background: rgba(255, 193, 7, 0.3);
+    border-color: rgba(255, 193, 7, 0.5);
+}
+
+/* Content Styles */
+.shorts-blocker-content {
+    transition: all 0.3s ease;
+}
+
+.shorts-blocker-stats {
+    margin-bottom: 15px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.stat-value {
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.shorts-blocker-message {
+    text-align: center;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.shorts-blocker-message p {
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes logoFloat {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+/* Only animate when hovering, not in still mode */
+.shorts-blocker-container:hover .shorts-blocker-logo {
+    animation: logoFloat 3s ease-in-out infinite;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    #shorts-blocker-ui {
+        top: 10px;
+        right: 10px;
+    }
+    
+    .shorts-blocker-logo {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .logo-icon {
+        font-size: 20px;
+    }
+    
+    .shorts-blocker-expanded {
+        width: 250px;
+        padding: 15px;
+    }
+    
+    .header-left h2 {
+        font-size: 16px;
+    }
+}
+
+/* Hide UI when on shorts page to avoid conflicts (only when blocker is enabled) */
+.shorts-blocker-enabled ytd-shorts:has(div[id="shorts-container"]) #shorts-blocker-ui {
+    display: none !important;
+}
+
+/* Additional YouTube-specific improvements (only when blocker is enabled) */
+.shorts-blocker-enabled ytd-page-manager:has(ytd-shorts) {
+    display: none !important;
+}
+
+/* Hide individual shorts in search results (only when blocker is enabled) */
+.shorts-blocker-enabled ytd-search ytd-video-renderer:has(a[href*="/shorts/"]) {
+    visibility: hidden !important;
+    display: none !important;
+}
+
+/* Hide individual shorts in trending (only when blocker is enabled) */
+.shorts-blocker-enabled ytd-trending ytd-video-renderer:has(a[href*="/shorts/"]) {
+    visibility: hidden !important;
+    display: none !important;
+}
+
+/* Hide individual shorts in subscriptions (only when blocker is enabled) */
+.shorts-blocker-enabled ytd-browse ytd-video-renderer:has(a[href*="/shorts/"]) {
+    visibility: hidden !important;
+    display: none !important;
+}
+
+/* Hide Shorts section headers and shelves (only when blocker is enabled) */
+.shorts-blocker-enabled ytd-rich-shelf-renderer:has(#title),
+.shorts-blocker-enabled ytd-rich-shelf-renderer:has(#title-text),
+.shorts-blocker-enabled ytd-rich-shelf-renderer:has(#rich-shelf-header) {
+    visibility: hidden !important;
+    display: none !important;
+}
+
+/* Hide specific Shorts shelf renderers */
+.shorts-blocker-enabled ytd-rich-shelf-renderer[shorts-shelf],
+.shorts-blocker-enabled ytd-rich-shelf-renderer[data-shorts-shelf] {
+    visibility: hidden !important;
+    display: none !important;
+}
+
+/* Smooth transitions for all blocked elements */
+[data-shorts-blocked="true"] {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Mute audio on Shorts pages when blocker is active */
+.shorts-blocker-enabled ytd-shorts video,
+.shorts-blocker-enabled ytd-shorts audio,
+.shorts-blocker-enabled video[src*="/shorts/"],
+.shorts-blocker-enabled audio[src*="/shorts/"] {
+    volume: 0 !important;
+    muted: true !important;
+}
+
+/* Success animation when shorts are blocked */
+@keyframes blockSuccess {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes logoPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.shorts-blocker-container.block-success {
+    animation: blockSuccess 0.3s ease-out;
+}
+
+.shorts-blocker-container.block-success .shorts-blocker-logo {
+    animation: logoPulse 0.6s ease-out;
+}
+
+/* Focus mode - reduce opacity when not hovered */
+.shorts-blocker-container.focus-mode {
+    opacity: 0.7;
+}
+
+.shorts-blocker-container.focus-mode:hover {
+    opacity: 1;
+}
+
+/* Disabled state styling */
+.shorts-blocker-container.disabled .shorts-blocker-logo {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    opacity: 0.8;
+}
+
+.shorts-blocker-container.disabled .logo-icon {
+    opacity: 0.7;
+}
+
+/* Hide in fullscreen mode */
+:fullscreen #shorts-blocker-ui,
+:-webkit-full-screen #shorts-blocker-ui,
+:-moz-full-screen #shorts-blocker-ui {
+    display: none !important;
+}
+
+/* Hide when YouTube is in fullscreen mode */
+.ytp-fullscreen #shorts-blocker-ui,
+.ytp-fullscreen .shorts-blocker-container {
+    display: none !important;
+}
+
+/* Hide when page is in fullscreen mode */
+html[data-fullscreen="true"] #shorts-blocker-ui,
+html[data-fullscreen="true"] .shorts-blocker-container {
+    display: none !important;
 }

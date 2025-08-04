@@ -1,0 +1,45 @@
+{
+  "name": "avoid-yt-shorts-enhanced",
+  "version": "2.0.0",
+  "description": "Enhanced YouTube Shorts blocker with statistics, pause/resume functionality, and beautiful UI. Stay focused on meaningful content!",
+  "main": "content.js",
+  "scripts": {
+    "build": "node build.js",
+    "build:dev": "node build.js --dev",
+    "build:prod": "node build.js --prod",
+    "clean": "node build.js --clean",
+    "validate": "node build.js --validate",
+    "test": "echo 'No tests specified'",
+    "lint": "echo 'No linter configured'"
+  },
+  "keywords": [
+    "chrome-extension",
+    "youtube",
+    "shorts",
+    "productivity",
+    "focus",
+    "blocker",
+    "distraction-free"
+  ],
+  "author": "Enhanced by AI Assistant",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hereisSwapnil/AvoidYoutubeShorts"
+  },
+  "bugs": {
+    "url": "https://github.com/hereisSwapnil/AvoidYoutubeShorts/issues"
+  },
+  "homepage": "https://github.com/hereisSwapnil/AvoidYoutubeShorts#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "fs-extra": "^11.1.1",
+    "terser": "^5.24.0",
+    "clean-css": "^5.3.2",
+    "archiver": "^6.0.1",
+    "chalk": "^4.1.2"
+  },
+  "dependencies": {}
+} 

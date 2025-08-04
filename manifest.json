@@ -23,7 +23,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["script.css"],
+      "resources": ["script.css", "icons/*"],
       "matches": ["https://www.youtube.com/*"]
     }
   ],

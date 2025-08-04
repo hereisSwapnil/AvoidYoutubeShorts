@@ -167,7 +167,7 @@ class BackgroundManager {
             if (settings.notifications) {
                 chrome.notifications.create({
                     type: 'basic',
-                    iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iMTIiIGZpbGw9IiM2NjdFRUEiLz4KPHBhdGggZD0iTTM2IDEySDEyVjM2SDM2VjEyWiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTE4IDE4SDE4VjIwSDE4VjE4WiIgZmlsbD0iIzY2N0VFQSIvPgo8cGF0aCBkPSJNMjQgMThIMjRWMjBIMjRWMThaIiBmaWxsPSIjNjY3RUVBIi8+CjxwYXRoIGQ9IjMwIDE4SDMwVjIwSDMwVjE4WiIgZmlsbD0iIzY2N0VFQSIvPgo8L3N2Zz4K',
+                    iconUrl: 'icons/icon.png',
                     title: title,
                     message: message
                 });

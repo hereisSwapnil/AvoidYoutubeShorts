@@ -1,13 +1,25 @@
-# AvoidYoutubeShorts
+# 🚫 AvoidYoutubeShorts
 
-A Chrome extension that blocks YouTube Shorts to help you stay focused on meaningful content.
+<div align="center">
+  <img src="icons/icon.png" alt="AvoidYoutubeShorts Logo" width="128" height="128">
+  <h3>Your YouTube Shorts blocker and productivity companion</h3>
+  <p>Stay focused on meaningful content by blocking YouTube Shorts with enhanced statistics, pause/resume functionality, and beautiful UI.</p>
+  <p>
+    <a href="https://github.com/hereisSwapnil/AvoidYoutubeShorts">
+      <strong>GitHub Repository: hereisSwapnil/AvoidYoutubeShorts</strong>
+    </a>
+  </p>
+</div>
 
-## Features
+## ✨ Features
 
-- Automatically hides YouTube Shorts content
-- Statistics dashboard to track viewing habits
-- Pause/resume functionality
-- Privacy-first: all data stored locally
+- 🚫 **Smart Shorts Blocking**: Automatically hides YouTube Shorts content across the platform
+- 📊 **Statistics Dashboard**: Track your viewing habits and productivity gains
+- ⏸️ **Pause/Resume Control**: Temporarily enable/disable blocking when needed
+- 🎨 **Beautiful UI**: Seamless integration with YouTube's design
+- ⚡ **Lightweight**: Minimal impact on YouTube page performance
+- 🔒 **Privacy-First**: No data collection - everything stays local
+- 🎯 **Enhanced Focus**: Stay productive and avoid short-form content distractions
 
 ## 🎥 Demo
 

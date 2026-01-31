@@ -29,7 +29,7 @@
 
 ## 📸 Screenshots
 
-[![Clean-Shot-2025-11-17-at-03-26-01-2x.png](https://i.postimg.cc/MTwbqHJb/Clean-Shot-2025-11-17-at-03-26-01-2x.png)](https://postimg.cc/WD9J723h)
+[![Clean-Shot-2026-01-31-at-06-35-29-2x.png](https://i.postimg.cc/rFXyXJT8/Clean-Shot-2026-01-31-at-06-35-29-2x.png)](https://postimg.cc/Sjdbccj5)
 
 ## Installation
 

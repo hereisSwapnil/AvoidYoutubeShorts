@@ -134,10 +134,8 @@ if (window.shortsBlockerInitialized) {
         updateCSSState() {
             if (this.isEnabled) {
                 document.body.classList.add('shorts-blocker-enabled');
-                console.log('🎯 CSS blocker enabled');
             } else {
                 document.body.classList.remove('shorts-blocker-enabled');
-                console.log('⏸️ CSS blocker disabled');
             }
             
             // Update audio state on Shorts pages
@@ -191,8 +189,8 @@ if (window.shortsBlockerInitialized) {
             
             if (messageEl && isShortsPage) {
                 messageEl.innerHTML = this.isEnabled ? 
-                    '<p>🎯 You\'re on a Shorts page!</p><p>💡 Consider navigating to regular videos</p><p>🔇 Audio is muted to prevent distraction</p>' :
-                    '<p>🎯 You\'re on a Shorts page!</p><p>✅ Shorts blocker is paused</p><p>🔊 Audio is enabled for normal viewing</p>';
+                    '<p>⚠️ Shorts Page Detected</p><p>Audio muted</p>' :
+                    '<p>✅ Blocker Paused</p>';
             }
             
             // Update container state
@@ -241,10 +239,10 @@ if (window.shortsBlockerInitialized) {
                             <div class="shorts-blocker-message">
                                 ${isShortsPage ? 
                                     (this.isEnabled ? 
-                                        '<p>🎯 You\'re on a Shorts page!</p><p>💡 Consider navigating to regular videos</p><p>🔇 Audio is muted to prevent distraction</p>' :
-                                        '<p>🎯 You\'re on a Shorts page!</p><p>✅ Shorts blocker is paused</p><p>🔊 Audio is enabled for normal viewing</p>'
+                                        '<p>⚠️ Shorts Page Detected</p><p>Audio muted</p>' :
+                                        '<p>✅ Blocker Paused</p>'
                                     ) : 
-                                    '<p>Stay focused on meaningful content! 📚</p>'
+                                    '<p>Stay focused! 📚</p>'
                                 }
                             </div>
                         </div>

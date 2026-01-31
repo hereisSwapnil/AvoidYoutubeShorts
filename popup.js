@@ -11,9 +11,34 @@ class PopupManager {
 
     async init() {
         this.setupEventListeners();
-        await this.loadStats();
-        this.showContent();
-        this.startUpdateTimer();
+        const isYouTube = await this.checkActiveTab();
+        if (isYouTube) {
+            await this.loadStats();
+            this.showContent();
+            this.startUpdateTimer();
+        } else {
+            this.showNotActiveState();
+        }
+    }
+
+    async checkActiveTab() {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        return tab.url && tab.url.includes('youtube.com');
+    }
+
+    showNotActiveState() {
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('content').classList.remove('hidden');
+        
+        // Disable controls
+        const controls = document.querySelector('.controls');
+        controls.style.opacity = '0.5';
+        controls.style.pointerEvents = 'none';
+        
+        // Update status message
+        const statusEl = document.getElementById('status');
+        statusEl.className = 'status paused';
+        statusEl.innerHTML = '<strong>⚠️ Not on YouTube</strong><br>Visit YouTube to use blockers';
     }
 
     setupEventListeners() {

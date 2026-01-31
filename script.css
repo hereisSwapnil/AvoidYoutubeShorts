@@ -297,56 +297,59 @@
     display: none !important;
 }
 
-/* Additional YouTube-specific improvements (only when blocker is enabled) */
-.shorts-blocker-enabled ytd-page-manager:has(ytd-shorts) {
-    display: none !important;
-}
+/* --- Expanded Blocking Coverage --- */
 
-/* Hide individual shorts in search results (only when blocker is enabled) */
-.shorts-blocker-enabled ytd-search ytd-video-renderer:has(a[href*="/shorts/"]) {
+/* 1. Home Page: Hide Shorts Shelves and Rich Items */
+.shorts-blocker-enabled ytd-rich-shelf-renderer[is-shorts],
+.shorts-blocker-enabled ytd-rich-shelf-renderer:has(span[id="title"][role="heading"]:contains("Shorts")),
+.shorts-blocker-enabled ytd-rich-shelf-renderer:has(a[href*="/shorts/"]) {
+    display: none !important;
     visibility: hidden !important;
-    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
-/* Hide individual shorts in trending (only when blocker is enabled) */
-.shorts-blocker-enabled ytd-trending ytd-video-renderer:has(a[href*="/shorts/"]) {
+/* 2. Search Page: Hide Reel Shelves (Shorts rows) */
+.shorts-blocker-enabled ytd-reel-shelf-renderer,
+.shorts-blocker-enabled ytd-search ytd-video-renderer:has(a[href*="/shorts/"]),
+.shorts-blocker-enabled grid-shelf-view-model:has(ytm-shorts-lockup-view-model-v2),
+.shorts-blocker-enabled grid-shelf-view-model:has(ytm-shorts-lockup-view-model),
+.shorts-blocker-enabled ytm-shorts-lockup-view-model-v2,
+.shorts-blocker-enabled ytm-shorts-lockup-view-model {
+    display: none !important;
     visibility: hidden !important;
-    display: none !important;
 }
 
-/* Hide individual shorts in subscriptions (only when blocker is enabled) */
-.shorts-blocker-enabled ytd-browse ytd-video-renderer:has(a[href*="/shorts/"]) {
+/* 3. Channel Page: Hide Shorts Tab and Content */
+/* Hide the "Shorts" tab in the channel navbar */
+.shorts-blocker-enabled tp-yt-paper-tab:has(div.tab-content:contains("Shorts")),
+.shorts-blocker-enabled tp-yt-paper-tab[aria-label="Shorts"] {
+    display: none !important;
     visibility: hidden !important;
+}
+
+/* Hide Shorts shelf on Channel Home tab */
+.shorts-blocker-enabled ytd-channel-video-player-renderer[is-shorts],
+.shorts-blocker-enabled ytd-reel-shelf-renderer {
     display: none !important;
 }
 
-/* Hide Shorts section headers and shelves (only when blocker is enabled) */
-.shorts-blocker-enabled ytd-rich-shelf-renderer:has(#title),
-.shorts-blocker-enabled ytd-rich-shelf-renderer:has(#title-text),
-.shorts-blocker-enabled ytd-rich-shelf-renderer:has(#rich-shelf-header) {
+/* 4. Sidebar/Guide: Robustly hide "Shorts" entry */
+.shorts-blocker-enabled ytd-guide-entry-renderer:has(a[title="Shorts"]),
+.shorts-blocker-enabled ytd-mini-guide-entry-renderer:has(a[title="Shorts"]),
+.shorts-blocker-enabled ytd-guide-entry-renderer:has(a[href="/shorts"]),
+.shorts-blocker-enabled ytd-mini-guide-entry-renderer:has(a[href="/shorts"]) {
+    display: none !important;
     visibility: hidden !important;
-    display: none !important;
 }
 
-/* Hide specific Shorts shelf renderers */
-.shorts-blocker-enabled ytd-rich-shelf-renderer[shorts-shelf],
-.shorts-blocker-enabled ytd-rich-shelf-renderer[data-shorts-shelf] {
-    visibility: hidden !important;
-    display: none !important;
-}
-
-/* Smooth transitions for all blocked elements */
-[data-shorts-blocked="true"] {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-/* Mute audio on Shorts pages when blocker is active */
+/* Mute audio intentionally omitted from CSS as it requires JS */
 .shorts-blocker-enabled ytd-shorts video,
 .shorts-blocker-enabled ytd-shorts audio,
 .shorts-blocker-enabled video[src*="/shorts/"],
 .shorts-blocker-enabled audio[src*="/shorts/"] {
-    volume: 0 !important;
-    muted: true !important;
+   /* No CSS properties for volume/mute exist */
 }
 
 /* Success animation when shorts are blocked */

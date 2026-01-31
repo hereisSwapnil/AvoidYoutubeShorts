@@ -35,6 +35,15 @@ class BackgroundManager {
             if (changeInfo.status === 'complete' && tab.url && tab.url.includes('youtube.com')) {
                 this.onYouTubeTabLoaded(tabId, tab);
             }
+            // Send URL change message for SPA navigation
+            if (changeInfo.url && tab.url && tab.url.includes('youtube.com')) {
+                chrome.tabs.sendMessage(tabId, { 
+                    action: 'urlChanged', 
+                    url: changeInfo.url 
+                }).catch(() => {
+                    // Content script might not be ready yet, which is fine
+                });
+            }
         });
     }
 

@@ -22,23 +22,69 @@ if (window.shortsBlockerInitialized) {
             await this.loadState();
             this.createUI();
             this.setupObserver();
+            this.setupNavigationHandling();
             this.setupFullscreenDetection();
             this.updateCSSState();
             await this.blockExistingShorts();
             this.updateStats();
         }
 
+        setupNavigationHandling() {
+            // Handle YouTube's SPA navigation events
+            document.addEventListener('yt-navigate-finish', () => {
+                this.handleNavigation();
+            });
+
+            // Handle background script messages for URL changes
+            chrome.runtime.onMessage.addListener((message) => {
+                if (message.action === 'urlChanged') {
+                    this.handleNavigation();
+                }
+            });
+        }
+
+        handleNavigation() {
+            console.log('🔄 Navigation detected');
+            
+            // Re-check for shorts page
+            const isShortsPage = window.location.pathname.includes('/shorts/');
+            
+            // Re-create UI if it was removed by YouTube
+            if (!document.getElementById('shorts-blocker-ui')) {
+                this.createUI();
+            }
+            
+            this.updateUI();
+            this.updateAudioState();
+            
+            // Force re-check of blocking
+            if (this.isEnabled) {
+                this.blockExistingShorts();
+            }
+        }
+
         async loadState() {
             try {
+                console.log('🔍 Attempting to load state from storage...');
                 const result = await chrome.storage.local.get(['shortsBlockerState', 'shortsBlockerStats']);
+                console.log('📦 Raw storage result:', JSON.stringify(result));
                 
                 // Load settings state
                 if (result.shortsBlockerState) {
-                    this.isEnabled = result.shortsBlockerState.isEnabled !== false; // Default to true
-                    console.log('📊 Loaded saved state:', result.shortsBlockerState);
-                    console.log('🔧 Current state - isEnabled:', this.isEnabled);
+                    // Clearly log what we found
+                    console.log('📂 Found saved state:', result.shortsBlockerState);
+                    
+                    // Explicit check for false
+                    if (result.shortsBlockerState.isEnabled === false) {
+                        this.isEnabled = false;
+                        console.log('� State set to DISABLED (false)');
+                    } else {
+                        this.isEnabled = true;
+                        console.log('� State set to ENABLED (true or undefined)');
+                    }
                 } else {
-                    console.log('📊 No saved state found, using defaults - isEnabled:', this.isEnabled);
+                    console.log('⚠️ No saved state found, using default (ENABLED)');
+                    this.isEnabled = true;
                 }
                 
                 // Load stats
@@ -52,7 +98,7 @@ if (window.shortsBlockerInitialized) {
                     console.log('📈 No saved stats found, using defaults');
                 }
             } catch (error) {
-                console.log('❌ Error loading state:', error);
+                console.error('❌ Error loading state:', error);
                 console.log('📊 Using defaults - isEnabled:', this.isEnabled);
             }
         }
@@ -511,27 +557,46 @@ if (window.shortsBlockerInitialized) {
 
 
         setupObserver() {
-            // Create a more efficient observer for dynamic content
+            // Create a more efficient observer with batching
+            let timeoutId = null;
+            const nodesToProcess = new Set();
+            
+            const processNodes = () => {
+                const nodes = Array.from(nodesToProcess);
+                nodesToProcess.clear();
+                
+                nodes.forEach(node => {
+                    // Only process if node is still in document
+                    if (document.contains(node)) {
+                        if (this.isEnabled) {
+                            this.checkAndBlockShorts(node).catch(() => {});
+                        }
+                        
+                        // Handle new videos/audio on Shorts pages
+                        if (window.location.pathname.includes('/shorts/')) {
+                            this.handleNewMediaElements(node);
+                        }
+                    }
+                });
+                timeoutId = null;
+            };
+
             const observer = new MutationObserver((mutations) => {
+                let shouldProcess = false;
                 mutations.forEach((mutation) => {
                     if (mutation.type === 'childList') {
                         mutation.addedNodes.forEach((node) => {
                             if (node.nodeType === Node.ELEMENT_NODE) {
-                                // Check and block shorts if enabled
-                                if (this.isEnabled) {
-                                    this.checkAndBlockShorts(node).catch(error => {
-                                        console.error('Error checking and blocking shorts:', error);
-                                    });
-                                }
-                                
-                                // Handle new videos/audio on Shorts pages based on blocker state
-                                if (window.location.pathname.includes('/shorts/')) {
-                                    this.handleNewMediaElements(node);
-                                }
+                                nodesToProcess.add(node);
+                                shouldProcess = true;
                             }
                         });
                     }
                 });
+                
+                if (shouldProcess && !timeoutId) {
+                    timeoutId = requestAnimationFrame(processNodes);
+                }
             });
 
             observer.observe(document.body, {
@@ -591,19 +656,44 @@ if (window.shortsBlockerInitialized) {
         }
 
         async checkAndBlockShorts(element) {
-            // Use improved selectors that target individual shorts without hiding entire sections
+            // Expanded selectors for Home, Search, and Channel pages
             const shortsSelectors = [
+                // Standard Shorts
                 'ytd-video-renderer:has(a[href*="/shorts/"])',
-                'ytd-reel-shelf-renderer:has(a[href*="/shorts/"])',
-                'ytd-shorts:has(div[id="shorts-container"])',
+                'ytd-reel-shelf-renderer',
+                'ytd-shorts',
                 'ytd-guide-entry-renderer:has(a[title="Shorts"])',
-                'ytd-rich-section-renderer ytd-rich-item-renderer:has(a[href*="/shorts/"])',
-                'ytd-rich-section-renderer ytd-compact-video-renderer:has(a[href*="/shorts/"])',
-                'ytd-rich-section-renderer ytd-grid-video-renderer:has(a[href*="/shorts/"])',
+                'ytd-mini-guide-entry-renderer:has(a[title="Shorts"])',
+                'ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts])',
+                
+                // Search Results
                 'ytd-search ytd-video-renderer:has(a[href*="/shorts/"])',
-                'ytd-trending ytd-video-renderer:has(a[href*="/shorts/"])',
-                'ytd-browse ytd-video-renderer:has(a[href*="/shorts/"])'
+                'ytd-search ytd-reel-shelf-renderer',
+                'grid-shelf-view-model:has(ytm-shorts-lockup-view-model-v2)',
+                'grid-shelf-view-model:has(ytm-shorts-lockup-view-model)',
+                'ytm-shorts-lockup-view-model-v2',
+                'ytm-shorts-lockup-view-model',
+                
+                // Channel Page
+                'ytd-channel-video-player-renderer[is-shorts]',
+                
+                // General Grid Items
+                'ytd-rich-item-renderer:has(a[href*="/shorts/"])',
+                'ytd-grid-video-renderer:has(a[href*="/shorts/"])',
+                'ytd-compact-video-renderer:has(a[href*="/shorts/"])'
             ];
+
+            // Manual check for elements that need text content verification (replacing :contains)
+            const tabContents = document.querySelectorAll('tp-yt-paper-tab div.tab-content');
+            tabContents.forEach(tab => {
+                if (tab.textContent && tab.textContent.includes('Shorts')) {
+                    const paperTab = tab.closest('tp-yt-paper-tab');
+                    if (paperTab) {
+                        paperTab.style.display = 'none';
+                        paperTab.setAttribute('data-shorts-blocked', 'true');
+                    }
+                }
+            });
 
             // Check for shorts section headers
             await this.checkAndBlockShortsHeaders(element);
@@ -618,30 +708,44 @@ if (window.shortsBlockerInitialized) {
             }
 
             // Also check if the element itself matches
-            if (element.matches && shortsSelectors.some(selector => element.matches(selector))) {
-                if (!element.hasAttribute('data-shorts-blocked')) {
-                    await this.blockElement(element);
+            if (element.matches) {
+                for (const selector of shortsSelectors) {
+                    if (element.matches(selector)) {
+                        if (!element.hasAttribute('data-shorts-blocked')) {
+                            await this.blockElement(element);
+                        }
+                        break;
+                    }
                 }
             }
         }
 
         async checkAndBlockShortsHeaders(element) {
-            // Check for shorts section headers by looking for elements with "Shorts" text
+            // Expanded header selectors
             const shortsHeaderSelectors = [
                 'ytd-rich-shelf-renderer',
-                '#rich-shelf-header',
-                'ytd-rich-section-renderer'
+                'ytd-rich-section-renderer',
+                'ytd-reel-shelf-renderer',
+                'grid-shelf-view-model'
             ];
+
+            const checkForShortsTitle = (el) => {
+                const titleElement = el.querySelector('#title, #title-text, .ytd-reel-shelf-renderer-title');
+                if (titleElement && titleElement.textContent && titleElement.textContent.trim().toLowerCase() === 'shorts') {
+                    return true;
+                }
+                // Check attributes
+                if (el.hasAttribute('is-shorts')) return true;
+                return false;
+            };
 
             for (const selector of shortsHeaderSelectors) {
                 const elements = element.querySelectorAll ? element.querySelectorAll(selector) : [];
                 for (const el of elements) {
-                    // Check if this element contains "Shorts" text
-                    const titleElement = el.querySelector('#title, #title-text, [id="title"], [id="title-text"]');
-                    if (titleElement && titleElement.textContent && titleElement.textContent.trim().toLowerCase() === 'shorts') {
+                    if (checkForShortsTitle(el)) {
                         if (!el.hasAttribute('data-shorts-blocked')) {
                             await this.blockElement(el);
-                            console.log('🚫 Blocked shorts section header:', titleElement.textContent);
+                            console.log('🚫 Blocked shorts section:', el.tagName);
                         }
                     }
                 }
@@ -649,11 +753,10 @@ if (window.shortsBlockerInitialized) {
 
             // Also check if the element itself is a shorts header
             if (element.matches && shortsHeaderSelectors.some(selector => element.matches(selector))) {
-                const titleElement = element.querySelector('#title, #title-text, [id="title"], [id="title-text"]');
-                if (titleElement && titleElement.textContent && titleElement.textContent.trim().toLowerCase() === 'shorts') {
+                if (checkForShortsTitle(element)) {
                     if (!element.hasAttribute('data-shorts-blocked')) {
                         await this.blockElement(element);
-                        console.log('🚫 Blocked shorts section header:', titleElement.textContent);
+                        console.log('🚫 Blocked shorts section:', element.tagName);
                     }
                 }
             }
@@ -849,7 +952,10 @@ if (window.shortsBlockerInitialized) {
         }
 
         getStats() {
-            return this.stats;
+            return {
+                ...this.stats,
+                isEnabled: this.isEnabled
+            };
         }
 
         async resetStats() {
@@ -909,37 +1015,53 @@ if (window.shortsBlockerInitialized) {
     // Global instance
     let shortsBlockerInstance = null;
 
-    // Initialize the blocker when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', async () => {
-            shortsBlockerInstance = new ShortsBlocker();
-        });
-    } else {
-        shortsBlockerInstance = new ShortsBlocker();
-    }
+    // Use a singleton pattern to prevent multiple instances
+    if (!window.hasAvoidShortsBlocker) {
+        window.hasAvoidShortsBlocker = true;
 
-    // Handle navigation in YouTube (SPA)
-    let currentUrl = location.href;
-    new MutationObserver(() => {
-        const url = location.href;
-        if (url !== currentUrl) {
-            currentUrl = url;
-            // Re-initialize blocker for new page
-            setTimeout(async () => {
-                if (!document.getElementById('shorts-blocker-ui')) {
-                    shortsBlockerInstance = new ShortsBlocker();
-                }
-            }, 1000);
-        }
-    }).observe(document, { subtree: true, childList: true });
+        // Initialize the blocker
+        const initBlocker = () => {
+            if (!shortsBlockerInstance) {
+                shortsBlockerInstance = new ShortsBlocker();
+            }
+        };
 
-    // Listen for messages from popup and background
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        if (shortsBlockerInstance) {
-            shortsBlockerInstance.handleMessage(message, sendResponse);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initBlocker);
         } else {
-            sendResponse({ error: 'Blocker not initialized' });
+            initBlocker();
         }
-        return true; // Keep message channel open for async responses
-    });
+
+        // Handle navigation in YouTube (SPA)
+        // We use the same instance and just call handleNavigation
+        let currentUrl = location.href;
+        new MutationObserver(() => {
+            const url = location.href;
+            if (url !== currentUrl) {
+                currentUrl = url;
+                if (shortsBlockerInstance) {
+                    // Give YouTube a moment to update the DOM
+                    setTimeout(() => {
+                        shortsBlockerInstance.handleNavigation();
+                    }, 500);
+                }
+            }
+        }).observe(document, { subtree: true, childList: true });
+
+        // Listen for messages from popup and background
+        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            if (shortsBlockerInstance) {
+                shortsBlockerInstance.handleMessage(message, sendResponse);
+            } else {
+                // If not initialized yet, try to initialize
+                initBlocker();
+                if (shortsBlockerInstance) {
+                    shortsBlockerInstance.handleMessage(message, sendResponse);
+                } else {
+                    sendResponse({ error: 'Blocker not initialized' });
+                }
+            }
+            return true; // Keep message channel open for async responses
+        });
+    }
 }

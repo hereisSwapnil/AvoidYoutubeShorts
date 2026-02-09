@@ -7,62 +7,112 @@ class OptionsManager {
             notifications: true,
             autoPause: false
         };
-        this.init();
+        this.stats = {
+            totalShortsBlocked: 0,
+            totalTimeSaved: 0,
+            installDate: Date.now()
+        };
+        this.storageKey = 'shortsBlockerState';
+        this.statsKey = 'shortsBlockerStats';
+        this.settingsKey = 'settings';
     }
 
     async init() {
         await this.loadSettings();
         await this.loadStats();
         this.setupEventListeners();
+        this.setupStorageListener();
         this.updateUI();
     }
 
     async loadSettings() {
         try {
-            const result = await chrome.storage.local.get('settings');
-            this.settings = { ...this.settings, ...result.settings };
+            // Load from chrome.storage
+            const result = await chrome.storage.local.get([this.settingsKey, this.storageKey]);
+            
+            console.log('📦 Loaded settings:', result);
+            
+            // Load general settings
+            if (result[this.settingsKey]) {
+                this.settings = { ...this.settings, ...result[this.settingsKey] };
+            }
+            
+            // Load enabled state from blocker state
+            if (result[this.storageKey]) {
+                this.settings.enabled = result[this.storageKey].isEnabled !== false;
+            }
+            
+            console.log('✅ Settings loaded:', this.settings);
         } catch (error) {
-            console.error('Error loading settings:', error);
+            console.error('❌ Error loading settings:', error);
         }
     }
 
     async loadStats() {
         try {
-            const result = await chrome.storage.local.get('stats');
-            this.stats = result.stats || {
-                totalShortsBlocked: 0,
-                totalTimeSaved: 0,
-                installDate: Date.now()
-            };
+            const result = await chrome.storage.local.get(this.statsKey);
+            
+            if (result[this.statsKey]) {
+                this.stats = {
+                    totalShortsBlocked: result[this.statsKey].shortsBlocked || 0,
+                    totalTimeSaved: (result[this.statsKey].shortsBlocked || 0) * 30,
+                    installDate: result[this.statsKey].startTime || Date.now()
+                };
+            }
+            
+            console.log('📈 Stats loaded:', this.stats);
         } catch (error) {
-            console.error('Error loading stats:', error);
+            console.error('❌ Error loading stats:', error);
         }
+    }
+
+    setupStorageListener() {
+        // Listen for storage changes to keep UI in sync
+        chrome.storage.onChanged.addListener((changes, area) => {
+            if (area === 'local') {
+                console.log('📦 Storage changed:', changes);
+                
+                if (changes[this.storageKey]) {
+                    this.settings.enabled = changes[this.storageKey].newValue?.isEnabled !== false;
+                    this.updateToggleUI('enabled-toggle', this.settings.enabled);
+                }
+                
+                if (changes[this.statsKey]) {
+                    this.stats = {
+                        totalShortsBlocked: changes[this.statsKey].newValue?.shortsBlocked || 0,
+                        totalTimeSaved: (changes[this.statsKey].newValue?.shortsBlocked || 0) * 30,
+                        installDate: changes[this.statsKey].newValue?.startTime || this.stats.installDate
+                    };
+                    this.updateStatsUI();
+                }
+            }
+        });
     }
 
     setupEventListeners() {
         // Toggle switches
-        document.getElementById('enabled-toggle').addEventListener('click', () => {
+        document.getElementById('enabled-toggle').addEventListener('click', async () => {
             this.settings.enabled = !this.settings.enabled;
             this.updateToggleUI('enabled-toggle', this.settings.enabled);
-            this.saveSettings();
+            await this.saveSettings();
         });
 
-        document.getElementById('show-ui-toggle').addEventListener('click', () => {
+        document.getElementById('show-ui-toggle').addEventListener('click', async () => {
             this.settings.showUI = !this.settings.showUI;
             this.updateToggleUI('show-ui-toggle', this.settings.showUI);
-            this.saveSettings();
+            await this.saveSettings();
         });
 
-        document.getElementById('notifications-toggle').addEventListener('click', () => {
+        document.getElementById('notifications-toggle').addEventListener('click', async () => {
             this.settings.notifications = !this.settings.notifications;
             this.updateToggleUI('notifications-toggle', this.settings.notifications);
-            this.saveSettings();
+            await this.saveSettings();
         });
 
-        document.getElementById('auto-pause-toggle').addEventListener('click', () => {
+        document.getElementById('auto-pause-toggle').addEventListener('click', async () => {
             this.settings.autoPause = !this.settings.autoPause;
             this.updateToggleUI('auto-pause-toggle', this.settings.autoPause);
-            this.saveSettings();
+            await this.saveSettings();
         });
 
         // Action buttons
@@ -92,7 +142,6 @@ class OptionsManager {
         }
     }
 
-    // Format large numbers with K, M, B suffixes
     formatNumber(num) {
         if (num >= 1000000000) {
             return (num / 1000000000).toFixed(1) + 'B';
@@ -104,14 +153,12 @@ class OptionsManager {
         return num.toString();
     }
 
-    // Format time duration in a readable way
     formatTime(seconds) {
         if (seconds < 60) {
             return `${seconds}s`;
         } else if (seconds < 3600) {
             const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = seconds % 60;
-            return `${minutes}m ${remainingSeconds}s`;
+            return `${minutes}m`;
         } else if (seconds < 86400) {
             const hours = Math.floor(seconds / 3600);
             const minutes = Math.floor((seconds % 3600) / 60);
@@ -123,6 +170,14 @@ class OptionsManager {
         }
     }
 
+    updateStatsUI() {
+        document.getElementById('total-blocked').textContent = this.formatNumber(this.stats.totalShortsBlocked);
+        document.getElementById('time-saved').textContent = this.formatTime(this.stats.totalTimeSaved);
+        
+        const installDate = new Date(this.stats.installDate);
+        document.getElementById('install-date').textContent = installDate.toLocaleDateString();
+    }
+
     updateUI() {
         // Update toggle states
         this.updateToggleUI('enabled-toggle', this.settings.enabled);
@@ -130,33 +185,44 @@ class OptionsManager {
         this.updateToggleUI('notifications-toggle', this.settings.notifications);
         this.updateToggleUI('auto-pause-toggle', this.settings.autoPause);
 
-        // Update stats with improved formatting
-        document.getElementById('total-blocked').textContent = this.formatNumber(this.stats.totalShortsBlocked || 0);
-        
-        const totalTimeSavedSeconds = this.stats.totalTimeSaved || 0;
-        document.getElementById('time-saved').textContent = this.formatTime(totalTimeSavedSeconds);
-        
-        const installDate = new Date(this.stats.installDate || Date.now());
-        document.getElementById('install-date').textContent = installDate.toLocaleDateString();
+        // Update stats
+        this.updateStatsUI();
     }
 
     async saveSettings() {
         try {
-            await chrome.storage.local.set({ settings: this.settings });
+            // Save general settings
+            await chrome.storage.local.set({ [this.settingsKey]: this.settings });
+            
+            // Save enabled state to blocker state
+            const blockerState = {
+                isEnabled: this.settings.enabled,
+                lastSaved: Date.now()
+            };
+            await chrome.storage.local.set({ [this.storageKey]: blockerState });
+            
+            console.log('💾 Settings saved:', this.settings);
+            
             this.showSaveIndicator();
             
-            // Notify all YouTube tabs about settings change
+            // Notify all YouTube tabs
             const tabs = await chrome.tabs.query({ url: 'https://www.youtube.com/*' });
-            tabs.forEach(tab => {
-                chrome.tabs.sendMessage(tab.id, { 
-                    action: 'settingsUpdated', 
-                    settings: this.settings 
-                }).catch(() => {
-                    // Tab might not be ready, ignore errors
-                });
-            });
+            for (const tab of tabs) {
+                try {
+                    await chrome.tabs.sendMessage(tab.id, { 
+                        action: 'settingsUpdated', 
+                        settings: this.settings 
+                    });
+                } catch (error) {
+                    // Tab might not be ready
+                    console.log('Could not notify tab:', tab.id);
+                }
+            }
+            
+            return true;
         } catch (error) {
-            console.error('Error saving settings:', error);
+            console.error('❌ Error saving settings:', error);
+            return false;
         }
     }
 
@@ -169,31 +235,42 @@ class OptionsManager {
     }
 
     async resetStats() {
-        if (confirm('Are you sure you want to reset all statistics? This action cannot be undone.')) {
-            try {
-                const newStats = {
-                    totalShortsBlocked: 0,
-                    totalTimeSaved: 0,
-                    installDate: Date.now()
-                };
-                
-                await chrome.storage.local.set({ stats: newStats });
-                this.stats = newStats;
-                this.updateUI();
-                
-                // Reset stats in all YouTube tabs
-                const tabs = await chrome.tabs.query({ url: 'https://www.youtube.com/*' });
-                tabs.forEach(tab => {
-                    chrome.tabs.sendMessage(tab.id, { action: 'resetStats' }).catch(() => {
-                        // Tab might not be ready, ignore errors
-                    });
-                });
-                
-                alert('Statistics have been reset successfully!');
-            } catch (error) {
-                console.error('Error resetting stats:', error);
-                alert('Error resetting statistics. Please try again.');
+        if (!confirm('Are you sure you want to reset all statistics? This action cannot be undone.')) {
+            return;
+        }
+        
+        try {
+            const newStats = {
+                shortsBlocked: 0,
+                startTime: Date.now(),
+                lastBlockTime: null,
+                lastSaved: Date.now()
+            };
+            
+            await chrome.storage.local.set({ [this.statsKey]: newStats });
+            
+            this.stats = {
+                totalShortsBlocked: 0,
+                totalTimeSaved: 0,
+                installDate: Date.now()
+            };
+            
+            this.updateStatsUI();
+            
+            // Reset stats in all YouTube tabs
+            const tabs = await chrome.tabs.query({ url: 'https://www.youtube.com/*' });
+            for (const tab of tabs) {
+                try {
+                    await chrome.tabs.sendMessage(tab.id, { action: 'resetStats' });
+                } catch (error) {
+                    console.log('Could not reset stats in tab:', tab.id);
+                }
             }
+            
+            alert('Statistics have been reset successfully!');
+        } catch (error) {
+            console.error('❌ Error resetting stats:', error);
+            alert('Error resetting statistics. Please try again.');
         }
     }
 
@@ -202,7 +279,8 @@ class OptionsManager {
             const exportData = {
                 stats: this.stats,
                 settings: this.settings,
-                exportDate: new Date().toISOString()
+                exportDate: new Date().toISOString(),
+                version: '2.0.0'
             };
             
             const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -218,7 +296,7 @@ class OptionsManager {
             
             alert('Statistics exported successfully!');
         } catch (error) {
-            console.error('Error exporting stats:', error);
+            console.error('❌ Error exporting stats:', error);
             alert('Error exporting statistics. Please try again.');
         }
     }
@@ -226,13 +304,14 @@ class OptionsManager {
     async refreshAllYouTubeTabs() {
         try {
             const tabs = await chrome.tabs.query({ url: 'https://www.youtube.com/*' });
-            tabs.forEach(tab => {
-                chrome.tabs.reload(tab.id);
-            });
+            
+            for (const tab of tabs) {
+                await chrome.tabs.reload(tab.id);
+            }
             
             alert(`Refreshed ${tabs.length} YouTube tab(s)!`);
         } catch (error) {
-            console.error('Error refreshing tabs:', error);
+            console.error('❌ Error refreshing tabs:', error);
             alert('Error refreshing tabs. Please try again.');
         }
     }
@@ -245,7 +324,7 @@ class OptionsManager {
                 message: 'This is a test notification! 🎉'
             });
         } catch (error) {
-            console.error('Error showing test notification:', error);
+            console.error('❌ Error showing test notification:', error);
             alert('Error showing test notification. Please check notification permissions.');
         }
     }
@@ -254,4 +333,4 @@ class OptionsManager {
 // Initialize options when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new OptionsManager();
-}); 
+});

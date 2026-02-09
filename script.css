@@ -309,12 +309,18 @@
     visibility: hidden !important;
 }
 
-/* Mute audio intentionally omitted from CSS as it requires JS */
-.shorts-blocker-enabled ytd-shorts video,
-.shorts-blocker-enabled ytd-shorts audio,
-.shorts-blocker-enabled video[src*="/shorts/"],
-.shorts-blocker-enabled audio[src*="/shorts/"] {
-   /* No CSS properties for volume/mute exist */
+/* 5. Hide Shorts chip-shape containers (filter chips) */
+.shorts-blocker-enabled #chip-shape-container:has(chip-shape button:contains("Shorts")),
+.shorts-blocker-enabled chip-shape:has(button div:contains("Shorts")) {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* 6. Hide Shorts tab shapes */
+.shorts-blocker-enabled yt-tab-shape[tab-title="Shorts"],
+.shorts-blocker-enabled yt-tab-shape:has(div:contains("Shorts")) {
+    display: none !important;
+    visibility: hidden !important;
 }
 
 /* Success animation when shorts are blocked */

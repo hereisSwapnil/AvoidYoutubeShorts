@@ -14,19 +14,36 @@ if (window.shortsBlockerInitialized) {
                 lastBlockTime: null
             };
             this.isEnabled = true;
-            this.init();
+            this.isInitialized = false;
+            this.storageKey = 'shortsBlockerState';
+            this.statsKey = 'shortsBlockerStats';
+            this.positionKey = 'shortsBlockerPosition';
         }
 
         async init() {
-            console.log("🚫 Avoid YouTube Shorts - Enhanced version loaded");
+            console.log("🚫 Avoid YouTube Shorts - Enhanced version loading...");
+            
+            // Load state first, before doing anything else
             await this.loadState();
+            
+            console.log("✅ State loaded. isEnabled:", this.isEnabled);
+            
+            // Now proceed with UI and blocking
             this.createUI();
             this.setupObserver();
             this.setupNavigationHandling();
             this.setupFullscreenDetection();
             this.updateCSSState();
-            await this.blockExistingShorts();
+            
+            // Block existing shorts if enabled
+            if (this.isEnabled) {
+                await this.blockExistingShorts();
+            }
+            
             this.updateStats();
+            this.isInitialized = true;
+            
+            console.log("✅ Initialization complete. isEnabled:", this.isEnabled);
         }
 
         setupNavigationHandling() {
@@ -46,9 +63,6 @@ if (window.shortsBlockerInitialized) {
         handleNavigation() {
             console.log('🔄 Navigation detected');
             
-            // Re-check for shorts page
-            const isShortsPage = window.location.pathname.includes('/shorts/');
-            
             // Re-create UI if it was removed by YouTube
             if (!document.getElementById('shorts-blocker-ui')) {
                 this.createUI();
@@ -57,7 +71,7 @@ if (window.shortsBlockerInitialized) {
             this.updateUI();
             this.updateAudioState();
             
-            // Force re-check of blocking
+            // Force re-check of blocking if enabled
             if (this.isEnabled) {
                 this.blockExistingShorts();
             }
@@ -65,41 +79,55 @@ if (window.shortsBlockerInitialized) {
 
         async loadState() {
             try {
-                console.log('🔍 Attempting to load state from storage...');
-                const result = await chrome.storage.local.get(['shortsBlockerState', 'shortsBlockerStats']);
-                console.log('📦 Raw storage result:', JSON.stringify(result));
+                console.log('📂 Loading state from storage...');
                 
-                // Load settings state
-                if (result.shortsBlockerState) {
-                    // Clearly log what we found
-                    console.log('📂 Found saved state:', result.shortsBlockerState);
+                // Use Promise.all to load both state and stats simultaneously
+                const [stateResult, statsResult] = await Promise.all([
+                    chrome.storage.local.get(this.storageKey),
+                    chrome.storage.local.get(this.statsKey)
+                ]);
+                
+                console.log('📦 Storage results:', { stateResult, statsResult });
+                
+                // Load enabled state with explicit handling
+                if (stateResult[this.storageKey] !== undefined) {
+                    const savedState = stateResult[this.storageKey];
                     
-                    // Explicit check for false
-                    if (result.shortsBlockerState.isEnabled === false) {
-                        this.isEnabled = false;
-                        console.log('� State set to DISABLED (false)');
-                    } else {
-                        this.isEnabled = true;
-                        console.log('� State set to ENABLED (true or undefined)');
+                    // Explicitly check for boolean value
+                    if (typeof savedState === 'object' && savedState !== null) {
+                        this.isEnabled = savedState.isEnabled !== false; // Default to true if undefined
+                    } else if (typeof savedState === 'boolean') {
+                        this.isEnabled = savedState;
                     }
+                    
+                    console.log('✅ Loaded state:', { isEnabled: this.isEnabled, savedState });
                 } else {
-                    console.log('⚠️ No saved state found, using default (ENABLED)');
+                    // No saved state - use default (enabled)
                     this.isEnabled = true;
+                    console.log('ℹ️ No saved state found, using default (enabled)');
+                    
+                    // Save the default state
+                    await this.saveState();
                 }
                 
                 // Load stats
-                if (result.shortsBlockerStats) {
+                if (statsResult[this.statsKey]) {
                     this.stats = {
-                        ...this.stats, // Keep default values as fallback
-                        ...result.shortsBlockerStats // Override with saved values
+                        ...this.stats,
+                        ...statsResult[this.statsKey]
                     };
-                    console.log('📈 Loaded saved stats:', result.shortsBlockerStats);
+                    console.log('📈 Loaded stats:', this.stats);
                 } else {
-                    console.log('📈 No saved stats found, using defaults');
+                    console.log('ℹ️ No saved stats found, using defaults');
+                    // Save default stats
+                    await this.saveStats();
                 }
+                
             } catch (error) {
                 console.error('❌ Error loading state:', error);
-                console.log('📊 Using defaults - isEnabled:', this.isEnabled);
+                // On error, default to enabled
+                this.isEnabled = true;
+                console.log('⚠️ Using fallback state (enabled) due to error');
             }
         }
 
@@ -109,10 +137,14 @@ if (window.shortsBlockerInitialized) {
                     isEnabled: this.isEnabled,
                     lastSaved: Date.now()
                 };
-                await chrome.storage.local.set({ shortsBlockerState: state });
+                
+                await chrome.storage.local.set({ [this.storageKey]: state });
                 console.log('💾 State saved:', state);
+                
+                return true;
             } catch (error) {
-                console.error('Error saving state:', error);
+                console.error('❌ Error saving state:', error);
+                return false;
             }
         }
 
@@ -124,18 +156,24 @@ if (window.shortsBlockerInitialized) {
                     lastBlockTime: this.stats.lastBlockTime,
                     lastSaved: Date.now()
                 };
-                await chrome.storage.local.set({ shortsBlockerStats: stats });
+                
+                await chrome.storage.local.set({ [this.statsKey]: stats });
                 console.log('💾 Stats saved:', stats);
+                
+                return true;
             } catch (error) {
-                console.error('Error saving stats:', error);
+                console.error('❌ Error saving stats:', error);
+                return false;
             }
         }
 
         updateCSSState() {
             if (this.isEnabled) {
                 document.body.classList.add('shorts-blocker-enabled');
+                console.log('🎨 Applied CSS class: shorts-blocker-enabled');
             } else {
                 document.body.classList.remove('shorts-blocker-enabled');
+                console.log('🎨 Removed CSS class: shorts-blocker-enabled');
             }
             
             // Update audio state on Shorts pages
@@ -150,32 +188,28 @@ if (window.shortsBlockerInitialized) {
             const audios = document.querySelectorAll('audio');
             
             if (this.isEnabled) {
-                // Blocker is active - mute all audio/video to prevent distraction
+                // Blocker is active - mute all audio/video
                 videos.forEach(video => {
                     video.muted = true;
                     video.volume = 0;
-                    console.log('🔇 Muted video (blocker active):', video.src || 'unknown source');
                 });
                 
                 audios.forEach(audio => {
                     audio.muted = true;
                     audio.volume = 0;
-                    console.log('🔇 Muted audio (blocker active):', audio.src || 'unknown source');
                 });
                 
                 console.log(`🔇 Muted ${videos.length} videos and ${audios.length} audio elements (blocker active)`);
             } else {
-                // Blocker is paused - unmute all audio/video for normal viewing
+                // Blocker is paused - unmute all audio/video
                 videos.forEach(video => {
                     video.muted = false;
                     video.volume = 1;
-                    console.log('🔊 Unmuted video (blocker paused):', video.src || 'unknown source');
                 });
                 
                 audios.forEach(audio => {
                     audio.muted = false;
                     audio.volume = 1;
-                    console.log('🔊 Unmuted audio (blocker paused):', audio.src || 'unknown source');
                 });
                 
                 console.log(`🔊 Unmuted ${videos.length} videos and ${audios.length} audio elements (blocker paused)`);
@@ -199,6 +233,17 @@ if (window.shortsBlockerInitialized) {
                     container.classList.add('disabled');
                 } else {
                     container.classList.remove('disabled');
+                }
+            }
+            
+            // Update toggle button
+            const toggleBtn = document.getElementById('shorts-blocker-toggle');
+            if (toggleBtn) {
+                toggleBtn.textContent = this.isEnabled ? 'Pause' : 'Resume';
+                if (this.isEnabled) {
+                    toggleBtn.classList.remove('paused');
+                } else {
+                    toggleBtn.classList.add('paused');
                 }
             }
         }
@@ -259,6 +304,9 @@ if (window.shortsBlockerInitialized) {
 
             // Make the container draggable
             this.makeDraggable();
+            
+            // Load saved position
+            this.loadPosition();
         }
 
         makeDraggable() {
@@ -270,10 +318,6 @@ if (window.shortsBlockerInitialized) {
             let initialY;
             let xOffset = 0;
             let yOffset = 0;
-            let isOnRightSide = true; // Track which side the logo is on
-
-            // Load saved position
-            this.loadPosition();
 
             const dragStart = (e) => {
                 if (e.type === "touchstart") {
@@ -287,11 +331,7 @@ if (window.shortsBlockerInitialized) {
                 if (e.target === container || container.contains(e.target)) {
                     isDragging = true;
                     container.classList.add('dragging');
-                    // Prevent text selection during drag
                     document.body.style.userSelect = 'none';
-                    document.body.style.webkitUserSelect = 'none';
-                    document.body.style.mozUserSelect = 'none';
-                    document.body.style.msUserSelect = 'none';
                 }
             };
 
@@ -300,14 +340,7 @@ if (window.shortsBlockerInitialized) {
                 initialY = currentY;
                 isDragging = false;
                 container.classList.remove('dragging');
-                
-                // Restore text selection
                 document.body.style.userSelect = '';
-                document.body.style.webkitUserSelect = '';
-                document.body.style.mozUserSelect = '';
-                document.body.style.msUserSelect = '';
-                
-                // Save position
                 this.savePosition();
             };
 
@@ -325,44 +358,28 @@ if (window.shortsBlockerInitialized) {
                         newY = e.clientY - initialY;
                     }
 
-                    // Constrain to screen bounds
                     const containerRect = container.getBoundingClientRect();
                     const containerWidth = containerRect.width;
                     const containerHeight = containerRect.height;
                     const screenWidth = window.innerWidth;
                     const screenHeight = window.innerHeight;
 
-                    // Determine which side to snap to based on X position
+                    // Determine which side to snap to
                     const centerX = newX + containerWidth / 2;
                     const isRightSide = centerX > screenWidth / 2;
                     
                     // Snap to left or right side
-                    const wasOnRightSide = isOnRightSide;
                     if (isRightSide) {
-                        newX = screenWidth - containerWidth - 20; // 20px margin from right edge
-                        isOnRightSide = true;
+                        newX = screenWidth - containerWidth - 20;
                     } else {
-                        newX = 20; // 20px margin from left edge
-                        isOnRightSide = false;
-                    }
-
-                    // Add snapping animation if side changed
-                    if (wasOnRightSide !== isOnRightSide) {
-                        container.classList.add('snapping');
-                        setTimeout(() => {
-                            container.classList.remove('snapping');
-                        }, 300);
+                        newX = 20;
                     }
 
                     // Update side indicator classes
                     container.classList.remove('on-left-side', 'on-right-side');
-                    if (isOnRightSide) {
-                        container.classList.add('on-right-side');
-                    } else {
-                        container.classList.add('on-left-side');
-                    }
+                    container.classList.add(isRightSide ? 'on-right-side' : 'on-left-side');
 
-                    // Constrain Y position to stay within screen bounds
+                    // Constrain Y position
                     if (newY < 0) {
                         newY = 0;
                     } else if (newY + containerHeight > screenHeight) {
@@ -378,12 +395,9 @@ if (window.shortsBlockerInitialized) {
                 }
             };
 
-            // Mouse events
             container.addEventListener("mousedown", dragStart);
             document.addEventListener("mousemove", drag);
             document.addEventListener("mouseup", dragEnd);
-
-            // Touch events
             container.addEventListener("touchstart", dragStart);
             document.addEventListener("touchmove", drag);
             document.addEventListener("touchend", dragEnd);
@@ -395,14 +409,13 @@ if (window.shortsBlockerInitialized) {
 
         async loadPosition() {
             try {
-                const result = await chrome.storage.local.get(['shortsBlockerPosition']);
-                if (result.shortsBlockerPosition) {
+                const result = await chrome.storage.local.get(this.positionKey);
+                if (result[this.positionKey]) {
                     const container = document.getElementById('shorts-blocker-container');
                     if (container) {
-                        // Validate and constrain the saved position
                         const constrainedPosition = this.constrainPosition(
-                            result.shortsBlockerPosition.x, 
-                            result.shortsBlockerPosition.y
+                            result[this.positionKey].x, 
+                            result[this.positionKey].y
                         );
                         this.setTranslate(constrainedPosition.x, constrainedPosition.y, container);
                     }
@@ -417,36 +430,28 @@ if (window.shortsBlockerInitialized) {
             if (!container) return { x: 20, y: 20 };
 
             const containerRect = container.getBoundingClientRect();
-            const containerWidth = containerRect.width || 60; // fallback width
-            const containerHeight = containerRect.height || 60; // fallback height
+            const containerWidth = containerRect.width || 60;
+            const containerHeight = containerRect.height || 60;
             const screenWidth = window.innerWidth;
             const screenHeight = window.innerHeight;
 
-            // Determine which side to snap to based on X position
             const centerX = x + containerWidth / 2;
             const isRightSide = centerX > screenWidth / 2;
             
-            // Snap to left or right side
             if (isRightSide) {
-                x = screenWidth - containerWidth - 20; // 20px margin from right edge
+                x = screenWidth - containerWidth - 20;
             } else {
-                x = 20; // 20px margin from left edge
+                x = 20;
             }
 
-            // Constrain Y position to stay within screen bounds
             if (y < 0) {
                 y = 0;
             } else if (y + containerHeight > screenHeight) {
                 y = screenHeight - containerHeight;
             }
 
-            // Update side indicator classes
             container.classList.remove('on-left-side', 'on-right-side');
-            if (isRightSide) {
-                container.classList.add('on-right-side');
-            } else {
-                container.classList.add('on-left-side');
-            }
+            container.classList.add(isRightSide ? 'on-right-side' : 'on-left-side');
 
             return { x, y };
         }
@@ -460,11 +465,9 @@ if (window.shortsBlockerInitialized) {
                     if (match) {
                         const x = parseInt(match[1]);
                         const y = parseInt(match[2]);
-                        
-                        // Save the constrained position
                         const constrainedPosition = this.constrainPosition(x, y);
                         await chrome.storage.local.set({ 
-                            shortsBlockerPosition: constrainedPosition
+                            [this.positionKey]: constrainedPosition
                         });
                     }
                 }
@@ -484,13 +487,10 @@ if (window.shortsBlockerInitialized) {
         }
 
         setupFullscreenDetection() {
-            // Listen for fullscreen changes
             document.addEventListener('fullscreenchange', this.handleFullscreenChange.bind(this));
             document.addEventListener('webkitfullscreenchange', this.handleFullscreenChange.bind(this));
             document.addEventListener('mozfullscreenchange', this.handleFullscreenChange.bind(this));
             document.addEventListener('MSFullscreenChange', this.handleFullscreenChange.bind(this));
-
-            // Listen for YouTube player fullscreen changes
             this.observeYouTubeFullscreen();
         }
 
@@ -502,18 +502,12 @@ if (window.shortsBlockerInitialized) {
             
             const ui = document.getElementById('shorts-blocker-ui');
             if (ui) {
-                if (isFullscreen) {
-                    ui.style.display = 'none';
-                    console.log('🎬 Fullscreen mode detected - hiding UI');
-                } else {
-                    ui.style.display = 'block';
-                    console.log('📺 Exited fullscreen mode - showing UI');
-                }
+                ui.style.display = isFullscreen ? 'none' : 'block';
+                console.log(isFullscreen ? '🎬 Fullscreen - hiding UI' : '📺 Exited fullscreen - showing UI');
             }
         }
 
         observeYouTubeFullscreen() {
-            // Watch for YouTube player fullscreen button changes
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                     if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
@@ -526,13 +520,11 @@ if (window.shortsBlockerInitialized) {
                 });
             });
 
-            // Observe YouTube player elements
             const playerElements = document.querySelectorAll('.ytp-fullscreen-button, .ytp-player-content');
             playerElements.forEach(element => {
                 observer.observe(element, { attributes: true, attributeFilter: ['class'] });
             });
 
-            // Also observe the body for YouTube-specific fullscreen classes
             observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
         }
 
@@ -542,20 +534,12 @@ if (window.shortsBlockerInitialized) {
             
             const ui = document.getElementById('shorts-blocker-ui');
             if (ui) {
-                if (isYouTubeFullscreen) {
-                    ui.style.display = 'none';
-                    console.log('🎬 YouTube fullscreen mode detected - hiding UI');
-                } else {
-                    ui.style.display = 'block';
-                    console.log('📺 YouTube exited fullscreen mode - showing UI');
-                }
+                ui.style.display = isYouTubeFullscreen ? 'none' : 'block';
+                console.log(isYouTubeFullscreen ? '🎬 YouTube fullscreen - hiding UI' : '📺 YouTube exited fullscreen - showing UI');
             }
         }
 
-
-
         setupObserver() {
-            // Create a more efficient observer with batching
             let timeoutId = null;
             const nodesToProcess = new Set();
             
@@ -564,13 +548,11 @@ if (window.shortsBlockerInitialized) {
                 nodesToProcess.clear();
                 
                 nodes.forEach(node => {
-                    // Only process if node is still in document
                     if (document.contains(node)) {
                         if (this.isEnabled) {
                             this.checkAndBlockShorts(node).catch(() => {});
                         }
                         
-                        // Handle new videos/audio on Shorts pages
                         if (window.location.pathname.includes('/shorts/')) {
                             this.handleNewMediaElements(node);
                         }
@@ -602,7 +584,7 @@ if (window.shortsBlockerInitialized) {
                 subtree: true
             });
 
-            // Periodically check for CSS-hidden shorts (every 2 seconds)
+            // Periodically check for CSS-hidden shorts
             setInterval(() => {
                 if (this.isEnabled) {
                     this.countCSSHiddenShorts().catch(error => {
@@ -613,11 +595,9 @@ if (window.shortsBlockerInitialized) {
         }
 
         handleNewMediaElements(element) {
-            // Handle videos and audio elements within the added element based on blocker state
             const videos = element.querySelectorAll ? element.querySelectorAll('video') : [];
             const audios = element.querySelectorAll ? element.querySelectorAll('audio') : [];
             
-            // Also check if the element itself is a video or audio
             if (element.tagName === 'VIDEO') {
                 videos.push(element);
             } else if (element.tagName === 'AUDIO') {
@@ -625,63 +605,72 @@ if (window.shortsBlockerInitialized) {
             }
             
             if (this.isEnabled) {
-                // Blocker is active - mute new media elements
                 videos.forEach(video => {
                     video.muted = true;
                     video.volume = 0;
-                    console.log('🔇 Muted new video (blocker active):', video.src || 'unknown source');
                 });
                 
                 audios.forEach(audio => {
                     audio.muted = true;
                     audio.volume = 0;
-                    console.log('🔇 Muted new audio (blocker active):', audio.src || 'unknown source');
                 });
             } else {
-                // Blocker is paused - unmute new media elements
                 videos.forEach(video => {
                     video.muted = false;
                     video.volume = 1;
-                    console.log('🔊 Unmuted new video (blocker paused):', video.src || 'unknown source');
                 });
                 
                 audios.forEach(audio => {
                     audio.muted = false;
                     audio.volume = 1;
-                    console.log('🔊 Unmuted new audio (blocker paused):', audio.src || 'unknown source');
                 });
             }
         }
 
         async checkAndBlockShorts(element) {
-            // Expanded selectors for Home, Search, and Channel pages
             const shortsSelectors = [
-                // Standard Shorts
                 'ytd-video-renderer:has(a[href*="/shorts/"])',
                 'ytd-reel-shelf-renderer',
                 'ytd-shorts',
                 'ytd-guide-entry-renderer:has(a[title="Shorts"])',
                 'ytd-mini-guide-entry-renderer:has(a[title="Shorts"])',
                 'ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts])',
-                
-                // Search Results
                 'ytd-search ytd-video-renderer:has(a[href*="/shorts/"])',
                 'ytd-search ytd-reel-shelf-renderer',
                 'grid-shelf-view-model:has(ytm-shorts-lockup-view-model-v2)',
                 'grid-shelf-view-model:has(ytm-shorts-lockup-view-model)',
                 'ytm-shorts-lockup-view-model-v2',
                 'ytm-shorts-lockup-view-model',
-                
-                // Channel Page
                 'ytd-channel-video-player-renderer[is-shorts]',
-                
-                // General Grid Items
                 'ytd-rich-item-renderer:has(a[href*="/shorts/"])',
                 'ytd-grid-video-renderer:has(a[href*="/shorts/"])',
-                'ytd-compact-video-renderer:has(a[href*="/shorts/"])'
+                'ytd-compact-video-renderer:has(a[href*="/shorts/"])',
+                'yt-tab-shape[tab-title="Shorts"]'
             ];
 
-            // Manual check for elements that need text content verification (replacing :contains)
+            // Block Shorts chip-shape containers (filter chips)
+            const chipContainers = document.querySelectorAll('#chip-shape-container');
+            chipContainers.forEach(container => {
+                if (container.textContent && container.textContent.includes('Shorts')) {
+                    if (!container.hasAttribute('data-shorts-blocked')) {
+                        container.style.display = 'none';
+                        container.setAttribute('data-shorts-blocked', 'true');
+                    }
+                }
+            });
+
+            // Block Shorts tab shapes
+            const tabShapes = document.querySelectorAll('yt-tab-shape');
+            tabShapes.forEach(tab => {
+                if ((tab.getAttribute('tab-title') === 'Shorts') || 
+                    (tab.textContent && tab.textContent.trim() === 'Shorts')) {
+                    if (!tab.hasAttribute('data-shorts-blocked')) {
+                        tab.style.display = 'none';
+                        tab.setAttribute('data-shorts-blocked', 'true');
+                    }
+                }
+            });
+
             const tabContents = document.querySelectorAll('tp-yt-paper-tab div.tab-content');
             tabContents.forEach(tab => {
                 if (tab.textContent && tab.textContent.includes('Shorts')) {
@@ -693,7 +682,6 @@ if (window.shortsBlockerInitialized) {
                 }
             });
 
-            // Check for shorts section headers
             await this.checkAndBlockShortsHeaders(element);
 
             for (const selector of shortsSelectors) {
@@ -705,7 +693,6 @@ if (window.shortsBlockerInitialized) {
                 }
             }
 
-            // Also check if the element itself matches
             if (element.matches) {
                 for (const selector of shortsSelectors) {
                     if (element.matches(selector)) {
@@ -719,7 +706,6 @@ if (window.shortsBlockerInitialized) {
         }
 
         async checkAndBlockShortsHeaders(element) {
-            // Expanded header selectors
             const shortsHeaderSelectors = [
                 'ytd-rich-shelf-renderer',
                 'ytd-rich-section-renderer',
@@ -732,7 +718,6 @@ if (window.shortsBlockerInitialized) {
                 if (titleElement && titleElement.textContent && titleElement.textContent.trim().toLowerCase() === 'shorts') {
                     return true;
                 }
-                // Check attributes
                 if (el.hasAttribute('is-shorts')) return true;
                 return false;
             };
@@ -743,18 +728,15 @@ if (window.shortsBlockerInitialized) {
                     if (checkForShortsTitle(el)) {
                         if (!el.hasAttribute('data-shorts-blocked')) {
                             await this.blockElement(el);
-                            console.log('🚫 Blocked shorts section:', el.tagName);
                         }
                     }
                 }
             }
 
-            // Also check if the element itself is a shorts header
             if (element.matches && shortsHeaderSelectors.some(selector => element.matches(selector))) {
                 if (checkForShortsTitle(element)) {
                     if (!element.hasAttribute('data-shorts-blocked')) {
                         await this.blockElement(element);
-                        console.log('🚫 Blocked shorts section:', element.tagName);
                     }
                 }
             }
@@ -770,29 +752,24 @@ if (window.shortsBlockerInitialized) {
             this.updateStats();
             await this.saveStats();
             
-            // Add a subtle animation effect
             element.style.transition = 'opacity 0.3s ease-out';
             element.style.opacity = '0';
             
-            // Trigger success animation on the logo
             this.triggerBlockSuccessAnimation();
         }
 
         async blockExistingShorts() {
-            // Block shorts that are already on the page
             const allElements = document.querySelectorAll('*');
             for (const element of allElements) {
                 await this.checkAndBlockShorts(element);
             }
             
-            // Also count shorts that are already hidden by CSS
             await this.countCSSHiddenShorts();
         }
 
         async countCSSHiddenShorts() {
             if (!this.isEnabled) return;
             
-            // Selectors for shorts that might be hidden by CSS
             const shortsSelectors = [
                 'ytd-video-renderer:has(a[href*="/shorts/"])',
                 'ytd-reel-shelf-renderer:has(a[href*="/shorts/"])',
@@ -813,23 +790,19 @@ if (window.shortsBlockerInitialized) {
                 try {
                     const elements = document.querySelectorAll(selector);
                     for (const element of elements) {
-                        // Check if element is hidden by CSS but not marked as blocked
                         const computedStyle = window.getComputedStyle(element);
                         const isHiddenByCSS = computedStyle.visibility === 'hidden' || computedStyle.display === 'none';
                         
                         if (isHiddenByCSS && !element.hasAttribute('data-shorts-blocked')) {
-                            // Mark as blocked and count it
                             element.setAttribute('data-shorts-blocked', 'true');
                             cssHiddenCount++;
                         }
                     }
                 } catch (error) {
-                    // Some selectors might not be supported in all browsers
-                    console.log('Selector not supported:', selector);
+                    // Selector not supported
                 }
             }
 
-            // Count shorts section headers hidden by CSS
             const headerSelectors = [
                 'ytd-rich-shelf-renderer',
                 '#rich-shelf-header',
@@ -852,7 +825,7 @@ if (window.shortsBlockerInitialized) {
                         }
                     }
                 } catch (error) {
-                    console.log('Header selector not supported:', selector);
+                    // Selector not supported
                 }
             }
 
@@ -867,27 +840,23 @@ if (window.shortsBlockerInitialized) {
 
         async toggleBlocker() {
             this.isEnabled = !this.isEnabled;
-            const toggleBtn = document.getElementById('shorts-blocker-toggle');
+            
+            console.log(`🔄 Toggling blocker to: ${this.isEnabled ? 'ENABLED' : 'DISABLED'}`);
+            
+            // Save state immediately
+            await this.saveState();
+            
+            // Update UI and CSS
+            this.updateUI();
+            this.updateCSSState();
             
             if (this.isEnabled) {
-                toggleBtn.textContent = 'Pause';
-                toggleBtn.classList.remove('paused');
-                console.log('🚫 Shorts blocker enabled');
-                this.updateCSSState();
-                this.updateUI();
-                // Re-block any shorts that might have been unblocked
+                console.log('✅ Shorts blocker enabled');
                 await this.blockExistingShorts();
             } else {
-                toggleBtn.textContent = 'Resume';
-                toggleBtn.classList.add('paused');
                 console.log('⏸️ Shorts blocker paused');
-                this.updateCSSState();
-                this.updateUI();
-                // Unblock all previously blocked shorts
                 this.unblockAllShorts();
             }
-            
-            await this.saveState();
         }
 
         unblockAllShorts() {
@@ -901,9 +870,6 @@ if (window.shortsBlockerInitialized) {
             console.log(`🔄 Unblocked ${blockedElements.length} shorts`);
         }
 
-
-
-        // Format large numbers with K, M, B suffixes
         formatNumber(num) {
             if (num >= 1000000000) {
                 return (num / 1000000000).toFixed(1) + 'B';
@@ -915,7 +881,6 @@ if (window.shortsBlockerInitialized) {
             return num.toString();
         }
 
-        // Format time duration in a readable way
         formatTime(seconds) {
             if (seconds < 60) {
                 return `${seconds}s`;
@@ -943,7 +908,6 @@ if (window.shortsBlockerInitialized) {
             }
             
             if (timeSaved) {
-                // Estimate time saved (assuming 30 seconds per short)
                 const estimatedSecondsSaved = this.stats.shortsBlocked * 30;
                 timeSaved.textContent = this.formatTime(estimatedSecondsSaved);
             }
@@ -965,7 +929,6 @@ if (window.shortsBlockerInitialized) {
             console.log('📊 Stats reset');
         }
 
-        // Handle messages from popup and background
         handleMessage(message, sendResponse) {
             switch (message.action) {
                 case 'getStats':
@@ -973,13 +936,15 @@ if (window.shortsBlockerInitialized) {
                     break;
                 
                 case 'toggleBlocker':
-                    this.toggleBlocker();
-                    sendResponse({ success: true, isEnabled: this.isEnabled });
+                    this.toggleBlocker().then(() => {
+                        sendResponse({ success: true, isEnabled: this.isEnabled });
+                    });
                     break;
                 
                 case 'resetStats':
-                    this.resetStats();
-                    sendResponse({ success: true });
+                    this.resetStats().then(() => {
+                        sendResponse({ success: true });
+                    });
                     break;
                 
                 case 'settingsUpdated':
@@ -997,6 +962,7 @@ if (window.shortsBlockerInitialized) {
                 this.isEnabled = settings.enabled;
                 this.updateCSSState();
                 this.updateUI();
+                this.saveState();
             }
             
             if (settings.hasOwnProperty('showUI')) {
@@ -1013,14 +979,13 @@ if (window.shortsBlockerInitialized) {
     // Global instance
     let shortsBlockerInstance = null;
 
-    // Use a singleton pattern to prevent multiple instances
     if (!window.hasAvoidShortsBlocker) {
         window.hasAvoidShortsBlocker = true;
 
-        // Initialize the blocker
-        const initBlocker = () => {
+        const initBlocker = async () => {
             if (!shortsBlockerInstance) {
                 shortsBlockerInstance = new ShortsBlocker();
+                await shortsBlockerInstance.init();
             }
         };
 
@@ -1031,14 +996,12 @@ if (window.shortsBlockerInitialized) {
         }
 
         // Handle navigation in YouTube (SPA)
-        // We use the same instance and just call handleNavigation
         let currentUrl = location.href;
         new MutationObserver(() => {
             const url = location.href;
             if (url !== currentUrl) {
                 currentUrl = url;
                 if (shortsBlockerInstance) {
-                    // Give YouTube a moment to update the DOM
                     setTimeout(() => {
                         shortsBlockerInstance.handleNavigation();
                     }, 500);
@@ -1048,18 +1011,18 @@ if (window.shortsBlockerInitialized) {
 
         // Listen for messages from popup and background
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            if (shortsBlockerInstance) {
+            if (shortsBlockerInstance && shortsBlockerInstance.isInitialized) {
                 shortsBlockerInstance.handleMessage(message, sendResponse);
             } else {
-                // If not initialized yet, try to initialize
-                initBlocker();
-                if (shortsBlockerInstance) {
-                    shortsBlockerInstance.handleMessage(message, sendResponse);
-                } else {
-                    sendResponse({ error: 'Blocker not initialized' });
-                }
+                initBlocker().then(() => {
+                    if (shortsBlockerInstance) {
+                        shortsBlockerInstance.handleMessage(message, sendResponse);
+                    } else {
+                        sendResponse({ error: 'Blocker not initialized' });
+                    }
+                });
             }
-            return true; // Keep message channel open for async responses
+            return true;
         });
     }
 }

@@ -168,6 +168,12 @@ if (window.shortsBlockerInitialized) {
         }
 
         updateCSSState() {
+            if (!document.body) {
+                console.log('⏳ document.body not ready for CSS update, waiting...');
+                setTimeout(() => this.updateCSSState(), 100);
+                return;
+            }
+
             if (this.isEnabled) {
                 document.body.classList.add('shorts-blocker-enabled');
                 console.log('🎨 Applied CSS class: shorts-blocker-enabled');
@@ -249,6 +255,14 @@ if (window.shortsBlockerInitialized) {
         }
 
         createUI() {
+            // Ensure document.body exists before proceeding
+            if (!document.body) {
+                console.log('⏳ document.body not ready, waiting...');
+                // Retry after a short delay
+                setTimeout(() => this.createUI(), 100);
+                return;
+            }
+
             // Remove existing UI if present
             const existingUI = document.getElementById('shorts-blocker-ui');
             if (existingUI) existingUI.remove();
@@ -540,6 +554,13 @@ if (window.shortsBlockerInitialized) {
         }
 
         setupObserver() {
+            // Ensure document.body exists before setting up observer
+            if (!document.body) {
+                console.log('⏳ document.body not ready for observer, waiting...');
+                setTimeout(() => this.setupObserver(), 100);
+                return;
+            }
+
             let timeoutId = null;
             const nodesToProcess = new Set();
             
@@ -583,6 +604,8 @@ if (window.shortsBlockerInitialized) {
                 childList: true,
                 subtree: true
             });
+
+            console.log('👁️ MutationObserver setup complete');
 
             // Periodically check for CSS-hidden shorts
             setInterval(() => {

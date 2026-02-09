@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Avoid YT Shorts - Enhanced",
-  "version": "2.0.0",
-  "description": "Enhanced YouTube Shorts blocker with statistics, pause/resume functionality, and beautiful UI. Stay focused on meaningful content!",
+  "name": "Avoid YT Shorts",
+  "version": "2.0.1",
+  "description": "Break free from the scroll trap. Automatically block YouTube Shorts, track productivity stats, and reclaim your focus. Zero BS.",
   "permissions": [
     "activeTab",
     "storage",
@@ -15,16 +15,27 @@
   ],
   "content_scripts": [
     {
-      "matches": ["https://www.youtube.com/*"],
-      "css": ["script.css"],
-      "js": ["content.js"],
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "css": [
+        "script.css"
+      ],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_start"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["script.css", "icons/*"],
-      "matches": ["https://www.youtube.com/*"]
+      "resources": [
+        "script.css",
+        "icons/*"
+      ],
+      "matches": [
+        "https://www.youtube.com/*"
+      ]
     }
   ],
   "icons": {

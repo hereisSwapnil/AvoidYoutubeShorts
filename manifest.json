@@ -1,14 +1,12 @@
 {
   "manifest_version": 3,
   "name": "Avoid YT Shorts",
-  "version": "2.0.1",
-  "description": "Break free from the scroll trap. Automatically block YouTube Shorts, track productivity stats, and reclaim your focus. Zero BS.",
+  "version": "2.1.0",
+  "description": "Break free from the scroll trap. Automatically block YouTube Shorts, redirect Shorts to standard video player, track focus stats, and reclaim your time.",
   "permissions": [
-    "activeTab",
     "storage",
     "tabs",
-    "notifications",
-    "scripting"
+    "notifications"
   ],
   "host_permissions": [
     "https://www.youtube.com/*"
@@ -39,13 +37,13 @@
     }
   ],
   "icons": {
-    "16": "icons/icon.png",
-    "32": "icons/icon.png",
-    "48": "icons/icon.png",
-    "128": "icons/icon.png"
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
   },
   "action": {
-    "default_title": "Avoid YT Shorts - Enhanced",
+    "default_title": "Avoid YT Shorts",
     "default_popup": "popup.html"
   },
   "options_page": "options.html",

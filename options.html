@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avoid YT Shorts - Settings</title>
+    <title>Avoid YT Shorts - Options</title>
     <style>
         * {
             margin: 0;
@@ -13,195 +13,199 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
             min-height: 100vh;
-            padding: 20px;
+            padding: 40px 20px;
         }
 
         .container {
-            max-width: 600px;
+            max-width: 640px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.1);
+            background: #1e293b;
             border-radius: 16px;
-            padding: 30px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 32px;
+            border: 1px solid #334155;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
         .header {
-            text-align: center;
-            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #334155;
         }
 
         .header h1 {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 700;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .header p {
-            font-size: 16px;
-            opacity: 0.8;
-            font-weight: 500;
+            font-size: 13px;
+            color: #94a3b8;
         }
 
         .section {
-            margin-bottom: 30px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 28px;
         }
 
-        .section h2 {
-            font-size: 20px;
+        .section-title {
+            font-size: 16px;
             font-weight: 600;
-            margin-bottom: 15px;
-            color: white;
+            margin-bottom: 16px;
+            color: #818cf8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .setting {
+        .setting-card {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            padding: 10px 0;
+            padding: 14px 16px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            margin-bottom: 10px;
         }
 
-        .setting:last-child {
-            margin-bottom: 0;
-        }
-
-        .setting-label {
-            flex: 1;
-        }
-
-        .setting-title {
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 5px;
-        }
-
-        .setting-description {
-            font-size: 14px;
-            opacity: 0.7;
-            line-height: 1.4;
-        }
-
-        .toggle-switch {
-            position: relative;
-            width: 50px;
-            height: 24px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .toggle-switch.active {
-            background: rgba(76, 175, 80, 0.8);
-        }
-
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 20px;
-            height: 20px;
-            background: white;
-            border-radius: 50%;
-            transition: transform 0.3s ease;
-        }
-
-        .toggle-switch.active::after {
-            transform: translateX(26px);
-        }
-
-        .btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
+        .setting-info h3 {
             font-size: 14px;
             font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 2px;
+        }
+
+        .setting-info p {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
             cursor: pointer;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(5px);
-            margin-right: 10px;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #475569;
+            transition: .3s;
+            border-radius: 24px;
         }
 
-        .btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-1px);
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
         }
 
-        .btn.danger {
-            background: rgba(255, 107, 107, 0.3);
-            border-color: rgba(255, 107, 107, 0.5);
+        input:checked + .slider {
+            background-color: #6366f1;
         }
 
-        .btn.danger:hover {
-            background: rgba(255, 107, 107, 0.4);
+        input:checked + .slider:before {
+            transform: translateX(20px);
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
         }
 
-        .stat-card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 8px;
+        .stat-box {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 16px;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .stat-value {
-            font-size: 24px;
+        .stat-number {
+            font-size: 20px;
             font-weight: 700;
-            margin-bottom: 5px;
+            color: #6366f1;
+            margin-bottom: 4px;
         }
 
         .stat-label {
-            font-size: 12px;
-            opacity: 0.8;
+            font-size: 11px;
+            color: #94a3b8;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            margin-bottom: 10px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 14px;
-            opacity: 0.7;
+        .btn-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            background: #334155;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #475569;
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.3);
         }
 
         .save-indicator {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(76, 175, 80, 0.9);
+            bottom: 24px;
+            right: 24px;
+            background: #10b981;
             color: white;
             padding: 10px 20px;
             border-radius: 8px;
+            font-size: 13px;
             font-weight: 600;
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
         }
 
         .save-indicator.show {
-            transform: translateX(0);
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
@@ -209,78 +213,103 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚫 Avoid YT Shorts</h1>
-            <p>Enhanced Version 2.0.0 - Settings</p>
-        </div>
-
-        <div class="section">
-            <h2>⚙️ General Settings</h2>
-
-            <div class="setting">
-                <div class="setting-label">
-                    <div class="setting-title">Enable Shorts Blocker</div>
-                    <div class="setting-description">Turn the extension on or off completely</div>
-                </div>
-                <div class="toggle-switch active" id="enabled-toggle"></div>
-            </div>
-
-            <div class="setting">
-                <div class="setting-label">
-                    <div class="setting-title">Show UI Panel</div>
-                    <div class="setting-description">Display the statistics panel on YouTube</div>
-                </div>
-                <div class="toggle-switch active" id="show-ui-toggle"></div>
-            </div>
-
-            <div class="setting">
-                <div class="setting-label">
-                    <div class="setting-title">Enable Notifications</div>
-                    <div class="setting-description">Show notifications for important events</div>
-                </div>
-                <div class="toggle-switch active" id="notifications-toggle"></div>
-            </div>
-
-            <div class="setting">
-                <div class="setting-label">
-                    <div class="setting-title">Auto-pause on Focus</div>
-                    <div class="setting-description">Automatically pause when you're actively browsing</div>
-                </div>
-                <div class="toggle-switch" id="auto-pause-toggle"></div>
+            <span style="font-size: 28px;">🚫</span>
+            <div>
+                <h1>Avoid YT Shorts Options</h1>
+                <p>Customize your YouTube distraction-free experience</p>
             </div>
         </div>
 
         <div class="section">
-            <h2>📊 Statistics</h2>
+            <div class="section-title">⚙️ Blocking Controls</div>
+
+            <div class="setting-card">
+                <div class="setting-info">
+                    <h3>Enable Shorts Blocker</h3>
+                    <p>Master toggle for all blocking features</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="enabled-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-card">
+                <div class="setting-info">
+                    <h3>Redirect Shorts to Watch Player</h3>
+                    <p>Convert /shorts/ URLs to standard /watch?v= player</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="redirect-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-card">
+                <div class="setting-info">
+                    <h3>Hide Shorts Shelves</h3>
+                    <p>Remove Shorts rows from Home, Search, and Channel pages</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="shelves-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-card">
+                <div class="setting-info">
+                    <h3>Hide Navigation Buttons</h3>
+                    <p>Remove Shorts button from sidebar drawer and channel tabs</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="nav-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-card">
+                <div class="setting-info">
+                    <h3>Show Floating Widget</h3>
+                    <p>Display mini floating control widget on YouTube</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="ui-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-card">
+                <div class="setting-info">
+                    <h3>Enable Notifications</h3>
+                    <p>Show notifications for updates and actions</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="notifications-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">📊 Lifetime Statistics</div>
             <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="total-blocked">0</div>
-                    <div class="stat-label">Total Shorts Blocked</div>
+                <div class="stat-box">
+                    <div class="stat-number" id="total-blocked">0</div>
+                    <div class="stat-label">Blocked</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="time-saved">0h</div>
-                    <div class="stat-label">Time Saved</div>
+                <div class="stat-box">
+                    <div class="stat-number" id="total-redirected">0</div>
+                    <div class="stat-label">Redirected</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="install-date">-</div>
-                    <div class="stat-label">Install Date</div>
+                <div class="stat-box">
+                    <div class="stat-number" id="install-date">-</div>
+                    <div class="stat-label">Installed</div>
                 </div>
             </div>
-
-            <div style="margin-top: 20px;">
-                <button class="btn danger" id="reset-stats-btn">Reset All Statistics</button>
-                <button class="btn" id="export-stats-btn">Export Statistics</button>
+            <div class="btn-group">
+                <button class="btn btn-danger" id="reset-stats-btn">Reset Stats</button>
+                <button class="btn" id="refresh-tabs-btn">Refresh YouTube Tabs</button>
             </div>
-        </div>
-
-        <div class="section">
-            <h2>🔧 Actions</h2>
-            <button class="btn" id="refresh-all-btn">Refresh All YouTube Tabs</button>
-            <button class="btn" id="test-notification-btn">Test Notification</button>
-        </div>
-
-        <div class="footer">
-            <p>Stay focused on meaningful content! 📚</p>
-            <p>Made with ❤️ for productivity</p>
         </div>
     </div>
 

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avoid YT Shorts - Enhanced</title>
+    <title>Avoid YT Shorts</title>
     <style>
         * {
             margin: 0;
@@ -14,57 +14,77 @@
 
         body {
             width: 320px;
-            min-height: 400px;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #0f172a;
-            /* Slate 900 */
+            background-color: #0f172a; /* Slate 900 */
             color: #f8fafc;
-            /* Slate 50 */
             overflow: hidden;
-        }
-
-        .container {
-            padding: 24px;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+            padding: 16px;
         }
 
         .header {
-            text-align: center;
-            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #1e293b;
         }
 
-        .header h1 {
-            font-size: 20px;
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-title h1 {
+            font-size: 16px;
             font-weight: 600;
-            margin-bottom: 4px;
-            letter-spacing: -0.025em;
+            letter-spacing: -0.02em;
         }
 
-        .header p {
-            font-size: 13px;
+        .version-badge {
+            font-size: 10px;
+            background: #334155;
             color: #94a3b8;
-            /* Slate 400 */
-            font-weight: 400;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .status-badge {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .status-badge.active {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #34d399;
+        }
+
+        .status-badge.paused {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
         }
 
         .stats-card {
             background: #1e293b;
-            /* Slate 800 */
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
             border: 1px solid #334155;
-            /* Slate 700 */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 16px;
         }
 
         .stat-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         .stat-row:last-child {
@@ -72,33 +92,90 @@
         }
 
         .stat-label {
-            font-size: 13px;
+            font-size: 12px;
             color: #94a3b8;
-            font-weight: 500;
         }
 
         .stat-value {
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 14px;
+            font-weight: 700;
             color: #f8fafc;
-            font-variant-numeric: tabular-nums;
+        }
+
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .toggle-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 38px;
+            height: 20px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #475569;
+            transition: .3s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #6366f1;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(18px);
         }
 
         .controls {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            margin-bottom: 24px;
+            gap: 8px;
+            margin-bottom: 16px;
         }
 
         .btn {
             background: #1e293b;
             border: 1px solid #334155;
             color: #e2e8f0;
-            padding: 12px;
+            padding: 10px;
             border-radius: 8px;
             font-size: 13px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             text-align: center;
@@ -106,142 +183,95 @@
 
         .btn:hover {
             background: #334155;
-            border-color: #475569;
         }
 
         .btn.primary {
-            background: #4f46e5;
-            /* Indigo 600 */
-            border-color: #4f46e5;
+            background: #6366f1;
+            border-color: #6366f1;
             color: white;
         }
 
         .btn.primary:hover {
-            background: #4338ca;
-            /* Indigo 700 */
-            border-color: #4338ca;
+            background: #4f46e5;
         }
 
-        .status {
-            text-align: center;
-            padding: 12px;
-            background: rgba(16, 185, 129, 0.1);
-            /* Emerald 500/10 */
-            border-radius: 8px;
-            margin-bottom: 24px;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            color: #34d399;
-            /* Emerald 400 */
-            font-size: 13px;
-        }
-
-        .status.active {
-            background: rgba(16, 185, 129, 0.1);
-            border-color: rgba(16, 185, 129, 0.2);
-            color: #34d399;
-        }
-
-        .status.paused {
-            background: rgba(245, 158, 11, 0.1);
-            /* Amber 500/10 */
-            border-color: rgba(245, 158, 11, 0.2);
-            color: #fbbf24;
-            /* Amber 400 */
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
         }
 
         .footer {
-            margin-top: auto;
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             color: #64748b;
-            /* Slate 500 */
-            padding-top: 16px;
-            padding-bottom: 12px;
-            /* Added padding */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 8px;
             border-top: 1px solid #1e293b;
         }
 
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 200px;
+        .footer a {
+            color: #818cf8;
+            text-decoration: none;
         }
 
-        .spinner {
-            width: 24px;
-            height: 24px;
-            border: 2px solid #334155;
-            border-top: 2px solid #4f46e5;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .hidden {
-            display: none !important;
+        .footer a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <div class="header">
+    <div class="header">
+        <div class="header-title">
+            <span>🚫</span>
             <h1>Avoid YT Shorts</h1>
-            <p>Version 2.0</p>
         </div>
+        <span class="version-badge">v2.1.0</span>
+    </div>
 
-        <div id="loading" class="loading">
-            <div class="spinner"></div>
+    <div id="status" class="status-badge active">
+        🟢 Active &bull; Blocking Shorts
+    </div>
+
+    <div class="stats-card">
+        <div class="stat-row">
+            <span class="stat-label">Shorts Blocked</span>
+            <span id="shorts-blocked" class="stat-value">0</span>
         </div>
-
-        <div id="content" class="hidden">
-            <div id="status" class="status active">
-                Active &bull; Blocking Shorts
-            </div>
-
-            <div class="stats-card">
-                <div class="stat-row">
-                    <span class="stat-label">Shorts Blocked</span>
-                    <span id="shorts-blocked" class="stat-value">0</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Time Saved</span>
-                    <span id="time-saved" class="stat-value">0m</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Session</span>
-                    <span id="session-time" class="stat-value">0m</span>
-                </div>
-            </div>
-
-            <div class="controls">
-                <button id="toggle-btn" class="btn primary">
-                    Pause Blocker
-                </button>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <button id="reset-btn" class="btn">
-                        Reset Stats
-                    </button>
-                    <button id="refresh-btn" class="btn">
-                        Refresh Page
-                    </button>
-                </div>
-            </div>
-
-            <div class="footer">
-                <p>Focus on what matters.</p>
-            </div>
+        <div class="stat-row">
+            <span class="stat-label">Shorts Redirected</span>
+            <span id="shorts-redirected" class="stat-value">0</span>
         </div>
+    </div>
+
+    <div class="toggle-row">
+        <span class="toggle-label">Redirect Shorts to Watch Player</span>
+        <label class="switch">
+            <input type="checkbox" id="redirect-toggle" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div class="controls">
+        <button id="toggle-btn" class="btn primary">
+            Pause Blocker
+        </button>
+        <div class="btn-group">
+            <button id="reset-btn" class="btn">
+                Reset Stats
+            </button>
+            <button id="options-btn" class="btn">
+                Settings ⚙️
+            </button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span>Distraction-Free YouTube</span>
+        <a href="#" id="open-options-link">Options</a>
     </div>
 
     <script src="popup.js"></script>

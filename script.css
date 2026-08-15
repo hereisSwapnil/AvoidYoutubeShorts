@@ -1,273 +1,23 @@
-/* Enhanced YouTube Shorts Blocker Styles */
+/* Avoid YouTube Shorts - Modern Standard CSS Selectors & Styles */
 
-/* Hide YouTube Shorts content - Effective selectors (only when blocker is enabled) */
-.shorts-blocker-enabled ytd-video-renderer:has(a[href*="/shorts/"]),
-.shorts-blocker-enabled ytd-reel-shelf-renderer:has(a[href*="/shorts/"]),
-.shorts-blocker-enabled ytd-shorts:has(div[id="shorts-container"]),
-.shorts-blocker-enabled ytd-guide-entry-renderer:has(a[title="Shorts"]),
-.shorts-blocker-enabled ytd-mini-guide-entry-renderer:has(a[title="Shorts"]) {
-    visibility: hidden !important;
-    display: none !important;
-}
+/* -------------------------------------------------------------
+   1. CORE SHORTS BLOCKING SELECTORS (Active when blocker enabled)
+   Uses standard CSS :has() supported natively in all modern browsers
+   ------------------------------------------------------------- */
 
-/* Hide individual shorts in sections without hiding entire sections (only when blocker is enabled) */
-.shorts-blocker-enabled ytd-rich-section-renderer ytd-rich-item-renderer:has(a[href*="/shorts/"]),
-.shorts-blocker-enabled ytd-rich-section-renderer ytd-compact-video-renderer:has(a[href*="/shorts/"]),
-.shorts-blocker-enabled ytd-rich-section-renderer ytd-grid-video-renderer:has(a[href*="/shorts/"]) {
-    visibility: hidden !important;
-    display: none !important;
-}
-
-/* Enhanced Draggable Logo UI Styles - Professional Polish */
-#shorts-blocker-ui {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000000;
-    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    pointer-events: none;
-}
-
-.shorts-blocker-container {
-    position: relative;
-    pointer-events: all;
-    cursor: grab;
-    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); /* Smoother spring-like feel */
-    transform-origin: center;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-.shorts-blocker-container:active {
-    cursor: grabbing;
-}
-
-.shorts-blocker-container.dragging {
-    cursor: grabbing !important;
-    transform: scale(1.02);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-}
-
-.shorts-blocker-container.dragging .shorts-blocker-logo {
-    border-color: rgba(255, 255, 255, 0.9);
-}
-
-/* Logo State (Default) */
-.shorts-blocker-logo {
-    width: 25px;  /* Reduced from 48px */
-    height: 25px;
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0,0,0,0.1);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(8px);
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 2;
-}
-
-.shorts-blocker-logo:hover {
-    transform: scale(1.05);
-    box-shadow: 0 8px 24px rgba(79, 70, 229, 0.4);
-    border-color: rgba(255, 255, 255, 0.6);
-}
-
-.logo-icon {
-    font-size: 18px; /* Reduced from 24px */
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
-    transition: transform 0.3s ease;
-}
-
-/* Expanded State */
-.shorts-blocker-expanded {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background: rgba(17, 24, 39, 0.95);
-    border-radius: 12px; /* Slightly smaller radius */
-    padding: 16px; /* Reduced from 24px */
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    width: 260px; /* Reduced from 300px */
-    opacity: 0;
-    visibility: hidden;
-    transform: scale(0.95) translateX(20px);
-    transition: all 0.2s cubic-bezier(0.4, 0, 1, 1);
-    z-index: 1;
-    color: #f3f4f6;
-}
-
-/* Hover State - Show Expanded Content */
-.shorts-blocker-container:hover .shorts-blocker-expanded {
-    opacity: 1;
-    visibility: visible;
-    transform: scale(1) translateX(0);
-    transition: all 0.3s cubic-bezier(0, 0, 0.2, 1);
-}
-
-.shorts-blocker-container:hover .shorts-blocker-logo {
-    opacity: 0;
-    transform: scale(0);
-}
-
-/* Header Styles */
-.shorts-blocker-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px; /* Reduced from 15px */
-}
-
-.header-left h2 {
-    color: white;
-    margin: 0;
-    font-size: 16px; /* Reduced from 18px */
-    font-weight: 600;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.shorts-blocker-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    padding: 4px 10px; /* Reduced padding */
-    border-radius: 6px;
-    font-size: 11px; /* Reduced from 12px */
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    backdrop-filter: blur(5px);
-}
-
-.shorts-blocker-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.05);
-}
-
-.shorts-blocker-btn.paused {
-    background: rgba(255, 193, 7, 0.3);
-    border-color: rgba(255, 193, 7, 0.5);
-}
-
-/* Content Styles */
-.shorts-blocker-content {
-    transition: all 0.3s ease;
-}
-
-.shorts-blocker-stats {
-    margin-bottom: 15px;
-}
-
-.stat-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.stat-label {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.stat-value {
-    color: white;
-    font-size: 16px;
-    font-weight: 700;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-.shorts-blocker-message {
-    text-align: center;
-    padding-top: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.shorts-blocker-message p {
-    color: rgba(255, 255, 255, 0.9);
-    margin: 0;
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 1.4;
-}
-
-/* Animations */
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateX(100px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes pulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.05);
-    }
-}
-
-@keyframes logoFloat {
-    0%, 100% {
-        transform: translateY(0px);
-    }
-    50% {
-        transform: translateY(-3px);
-    }
-}
-
-/* Only animate when hovering, not in still mode */
-.shorts-blocker-container:hover .shorts-blocker-logo {
-    animation: logoFloat 3s ease-in-out infinite;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-    #shorts-blocker-ui {
-        top: 10px;
-        right: 10px;
-    }
-    
-    .shorts-blocker-logo {
-        width: 50px;
-        height: 50px;
-    }
-    
-    .logo-icon {
-        font-size: 20px;
-    }
-    
-    .shorts-blocker-expanded {
-        width: 250px;
-        padding: 15px;
-    }
-    
-    .header-left h2 {
-        font-size: 16px;
-    }
-}
-
-/* Hide UI when on shorts page to avoid conflicts (only when blocker is enabled) */
-.shorts-blocker-enabled ytd-shorts:has(div[id="shorts-container"]) #shorts-blocker-ui {
-    display: none !important;
-}
-
-/* --- Expanded Blocking Coverage --- */
-
-/* 1. Home Page: Hide Shorts Shelves and Rich Items */
+/* Hide Shorts shelves on Homepage, Search, & Recommendations */
 .shorts-blocker-enabled ytd-rich-shelf-renderer[is-shorts],
-.shorts-blocker-enabled ytd-rich-shelf-renderer:has(span[id="title"][role="heading"]:contains("Shorts")),
-.shorts-blocker-enabled ytd-rich-shelf-renderer:has(a[href*="/shorts/"]) {
+.shorts-blocker-enabled ytd-rich-shelf-renderer:has(a[href*="/shorts/"]),
+.shorts-blocker-enabled ytd-rich-section-renderer:has(a[href*="/shorts/"]),
+.shorts-blocker-enabled ytd-reel-shelf-renderer,
+.shorts-blocker-enabled ytd-shorts,
+.shorts-blocker-enabled #shorts-container,
+.shorts-blocker-enabled grid-shelf-view-model:has(ytm-shorts-lockup-view-model),
+.shorts-blocker-enabled grid-shelf-view-model:has(ytm-shorts-lockup-view-model-v2),
+.shorts-blocker-enabled grid-shelf-view-model:has(a[href*="/shorts/"]),
+.shorts-blocker-enabled ytm-shorts-lockup-view-model,
+.shorts-blocker-enabled ytm-shorts-lockup-view-model-v2,
+.shorts-blocker-enabled yt-lockup-view-model:has(a[href*="/shorts/"]) {
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
@@ -275,118 +25,216 @@
     padding: 0 !important;
 }
 
-/* 2. Search Page: Hide Reel Shelves (Shorts rows) */
-.shorts-blocker-enabled ytd-reel-shelf-renderer,
-.shorts-blocker-enabled ytd-search ytd-video-renderer:has(a[href*="/shorts/"]),
-.shorts-blocker-enabled grid-shelf-view-model:has(ytm-shorts-lockup-view-model-v2),
-.shorts-blocker-enabled grid-shelf-view-model:has(ytm-shorts-lockup-view-model),
-.shorts-blocker-enabled ytm-shorts-lockup-view-model-v2,
-.shorts-blocker-enabled ytm-shorts-lockup-view-model {
+/* Hide individual Shorts cards in standard video grids without breaking regular videos */
+.shorts-blocker-enabled ytd-rich-item-renderer:has(a[href*="/shorts/"]),
+.shorts-blocker-enabled ytd-video-renderer:has(a[href*="/shorts/"]),
+.shorts-blocker-enabled ytd-compact-video-renderer:has(a[href*="/shorts/"]),
+.shorts-blocker-enabled ytd-grid-video-renderer:has(a[href*="/shorts/"]) {
     display: none !important;
     visibility: hidden !important;
 }
 
-/* 3. Channel Page: Hide Shorts Tab and Content */
-/* Hide the "Shorts" tab in the channel navbar */
-.shorts-blocker-enabled tp-yt-paper-tab:has(div.tab-content:contains("Shorts")),
-.shorts-blocker-enabled tp-yt-paper-tab[aria-label="Shorts"] {
-    display: none !important;
-    visibility: hidden !important;
-}
-
-/* Hide Shorts shelf on Channel Home tab */
-.shorts-blocker-enabled ytd-channel-video-player-renderer[is-shorts],
-.shorts-blocker-enabled ytd-reel-shelf-renderer {
-    display: none !important;
-}
-
-/* 4. Sidebar/Guide: Robustly hide "Shorts" entry */
+/* Hide Sidebar / Drawer Shorts Links */
+.shorts-blocker-enabled ytd-guide-entry-renderer:has(a[href*="/shorts"]),
+.shorts-blocker-enabled ytd-mini-guide-entry-renderer:has(a[href*="/shorts"]),
 .shorts-blocker-enabled ytd-guide-entry-renderer:has(a[title="Shorts"]),
-.shorts-blocker-enabled ytd-mini-guide-entry-renderer:has(a[title="Shorts"]),
-.shorts-blocker-enabled ytd-guide-entry-renderer:has(a[href="/shorts"]),
-.shorts-blocker-enabled ytd-mini-guide-entry-renderer:has(a[href="/shorts"]) {
+.shorts-blocker-enabled ytd-mini-guide-entry-renderer:has(a[title="Shorts"]) {
     display: none !important;
     visibility: hidden !important;
 }
 
-/* 5. Hide Shorts chip-shape containers (filter chips) */
-.shorts-blocker-enabled #chip-shape-container:has(chip-shape button:contains("Shorts")),
-.shorts-blocker-enabled chip-shape:has(button div:contains("Shorts")) {
-    display: none !important;
-    visibility: hidden !important;
-}
-
-/* 6. Hide Shorts tab shapes */
+/* Hide Shorts Tab on Channel Pages */
 .shorts-blocker-enabled yt-tab-shape[tab-title="Shorts"],
-.shorts-blocker-enabled yt-tab-shape:has(div:contains("Shorts")) {
+.shorts-blocker-enabled yt-tab-shape:has(a[href*="/shorts"]),
+.shorts-blocker-enabled tp-yt-paper-tab:has(a[href*="/shorts"]),
+.shorts-blocker-enabled ytd-channel-video-player-renderer[is-shorts] {
     display: none !important;
     visibility: hidden !important;
 }
 
-/* Success animation when shorts are blocked */
-@keyframes blockSuccess {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.1);
-    }
-    100% {
-        transform: scale(1);
-    }
+/* Hide Search Filter Chips for Shorts */
+.shorts-blocker-enabled yt-chip-cloud-chip-renderer:has(button[title="Shorts"]),
+.shorts-blocker-enabled chip-shape:has(button[aria-label*="Shorts"]) {
+    display: none !important;
+    visibility: hidden !important;
 }
 
-@keyframes logoPulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.05);
-    }
+/* Hide Shorts in Watch Next / Related Column */
+.shorts-blocker-enabled ytd-watch-next-secondary-results-renderer ytd-reel-shelf-renderer,
+.shorts-blocker-enabled ytd-item-section-renderer:has(a[href*="/shorts/"]) {
+    display: none !important;
 }
 
-.shorts-blocker-container.block-success {
-    animation: blockSuccess 0.3s ease-out;
+
+/* -------------------------------------------------------------
+   2. FLOATING CONTROL WIDGET UI (Glassmorphism & Drag Handle)
+   ------------------------------------------------------------- */
+#shorts-blocker-ui {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000000;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    pointer-events: none;
 }
 
-.shorts-blocker-container.block-success .shorts-blocker-logo {
-    animation: logoPulse 0.6s ease-out;
+.shorts-blocker-container {
+    position: relative;
+    pointer-events: all;
+    cursor: grab;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transform-origin: center;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
-/* Focus mode - reduce opacity when not hovered */
-.shorts-blocker-container.focus-mode {
-    opacity: 0.7;
+.shorts-blocker-container:active,
+.shorts-blocker-container.dragging {
+    cursor: grabbing !important;
+    transform: scale(1.03);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
 }
 
-.shorts-blocker-container.focus-mode:hover {
+/* Floating Logo Pill */
+.shorts-blocker-logo {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(8px);
+    transition: all 0.25s ease;
+    position: relative;
+    z-index: 2;
+}
+
+.shorts-blocker-logo:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+.logo-icon {
+    font-size: 14px;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* Expanded Card Panel */
+.shorts-blocker-expanded {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: rgba(15, 23, 42, 0.95);
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    width: 240px;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.92) translateX(12px);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 1;
+    color: #f8fafc;
+}
+
+/* Reveal Panel on Hover */
+.shorts-blocker-container:hover .shorts-blocker-expanded {
     opacity: 1;
+    visibility: visible;
+    transform: scale(1) translateX(0);
 }
 
-/* Disabled state styling */
-.shorts-blocker-container.disabled .shorts-blocker-logo {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-    opacity: 0.8;
+.shorts-blocker-container:hover .shorts-blocker-logo {
+    opacity: 0;
+    transform: scale(0);
 }
 
-.shorts-blocker-container.disabled .logo-icon {
-    opacity: 0.7;
+/* Header & Control Buttons */
+.shorts-blocker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
 }
 
-/* Hide in fullscreen mode */
+.header-left h2 {
+    color: #ffffff;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.shorts-blocker-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.shorts-blocker-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.shorts-blocker-btn.paused {
+    background: rgba(245, 158, 11, 0.25);
+    border-color: rgba(245, 158, 11, 0.5);
+    color: #fbbf24;
+}
+
+/* Stats Counter Row */
+.shorts-blocker-stats {
+    margin-bottom: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.stat-item:last-child {
+    margin-bottom: 0;
+}
+
+.stat-label {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.stat-value {
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.shorts-blocker-message {
+    text-align: center;
+    font-size: 12px;
+    color: #cbd5e1;
+}
+
+.shorts-blocker-message p {
+    margin: 2px 0;
+}
+
+/* Fullscreen hiding */
 :fullscreen #shorts-blocker-ui,
 :-webkit-full-screen #shorts-blocker-ui,
-:-moz-full-screen #shorts-blocker-ui {
-    display: none !important;
-}
-
-/* Hide when YouTube is in fullscreen mode */
-.ytp-fullscreen #shorts-blocker-ui,
-.ytp-fullscreen .shorts-blocker-container {
-    display: none !important;
-}
-
-/* Hide when page is in fullscreen mode */
-html[data-fullscreen="true"] #shorts-blocker-ui,
-html[data-fullscreen="true"] .shorts-blocker-container {
+.ytp-fullscreen #shorts-blocker-ui {
     display: none !important;
 }

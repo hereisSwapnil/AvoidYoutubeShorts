@@ -1,4 +1,4 @@
-// Background service worker for Avoid YT Shorts - Enhanced
+// Background service worker for Avoid YT Shorts - Manifest V3
 class BackgroundManager {
     constructor() {
         this.init();
@@ -10,7 +10,7 @@ class BackgroundManager {
     }
 
     setupEventListeners() {
-        // Handle extension installation
+        // Handle extension installation and updates
         chrome.runtime.onInstalled.addListener((details) => {
             if (details.reason === 'install') {
                 this.onInstall();
@@ -21,124 +21,109 @@ class BackgroundManager {
 
         // Handle extension startup
         chrome.runtime.onStartup.addListener(() => {
-            this.onStartup();
+            console.log('🚫 Avoid YT Shorts - Extension started');
         });
 
-        // Handle messages from content scripts and popup
+        // Handle messages from content scripts, popup, and options
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             this.handleMessage(message, sender, sendResponse);
             return true; // Keep message channel open for async responses
         });
 
-        // Handle tab updates
+        // Handle tab URL updates (for YouTube SPA navigation events)
         chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-            if (changeInfo.status === 'complete' && tab.url && tab.url.includes('youtube.com')) {
-                this.onYouTubeTabLoaded(tabId, tab);
-            }
-            // Send URL change message for SPA navigation
             if (changeInfo.url && tab.url && tab.url.includes('youtube.com')) {
                 chrome.tabs.sendMessage(tabId, { 
                     action: 'urlChanged', 
                     url: changeInfo.url 
                 }).catch(() => {
-                    // Content script might not be ready yet, which is fine
+                    // Content script might not be initialized on tab yet, which is expected
                 });
             }
         });
     }
 
-    onInstall() {
+    async onInstall() {
         console.log('🚫 Avoid YT Shorts - Extension installed');
         
-        // Set default settings
-        chrome.storage.local.set({
-            settings: {
-                enabled: true,
-                showUI: true,
-                autoPause: false,
-                notifications: true
-            },
-            stats: {
-                totalShortsBlocked: 0,
-                totalTimeSaved: 0,
-                installDate: Date.now()
-            }
+        // Initialize default settings & stats
+        const defaultSettings = {
+            enabled: true,
+            redirectShorts: true,
+            hideShelves: true,
+            hideNav: true,
+            showUI: true,
+            notifications: true
+        };
+
+        const defaultStats = {
+            shortsBlocked: 0,
+            shortsRedirected: 0,
+            startTime: Date.now(),
+            installDate: Date.now()
+        };
+
+        await chrome.storage.local.set({
+            settings: defaultSettings,
+            shortsBlockerState: { isEnabled: true, redirectShorts: true, lastSaved: Date.now() },
+            shortsBlockerStats: defaultStats,
+            stats: defaultStats
         });
 
-        // Show welcome notification
+        // Welcome notification
         this.showNotification(
-            'Avoid YT Shorts - Enhanced',
-            'Extension installed successfully! Visit YouTube to start blocking shorts.'
+            'Avoid YT Shorts Active',
+            'Shorts blocking and video redirection enabled! Enjoy distraction-free YouTube.'
         );
     }
 
     onUpdate(previousVersion) {
-        console.log(`🚫 Avoid YT Shorts - Updated from ${previousVersion} to 2.0.0`);
-        
-        // Show update notification
-        this.showNotification(
-            'Avoid YT Shorts - Enhanced',
-            'Extension updated to version 2.0.0! New features include statistics, pause/resume, and beautiful UI.'
-        );
-    }
-
-    onStartup() {
-        console.log('🚫 Avoid YT Shorts - Extension started');
-    }
-
-    onYouTubeTabLoaded(tabId, tab) {
-        // Inject content script if not already injected
-        chrome.scripting.executeScript({
-            target: { tabId: tabId },
-            files: ['content.js']
-        }).catch(error => {
-            console.log('Content script already injected or error:', error);
-        });
+        console.log(`🚫 Avoid YT Shorts - Updated from ${previousVersion} to 2.1.0`);
     }
 
     async handleMessage(message, sender, sendResponse) {
         try {
             switch (message.action) {
-                case 'getStats':
+                case 'getStats': {
                     const stats = await this.getStats();
                     sendResponse({ stats });
                     break;
-
-                case 'updateStats':
+                }
+                case 'updateStats': {
                     await this.updateStats(message.stats);
                     sendResponse({ success: true });
                     break;
-
-                case 'getSettings':
+                }
+                case 'getSettings': {
                     const settings = await this.getSettings();
                     sendResponse({ settings });
                     break;
-
-                case 'updateSettings':
+                }
+                case 'updateSettings': {
                     await this.updateSettings(message.settings);
                     sendResponse({ success: true });
                     break;
-
-                case 'showNotification':
+                }
+                case 'showNotification': {
                     this.showNotification(message.title, message.message);
                     sendResponse({ success: true });
                     break;
-
+                }
                 default:
                     sendResponse({ error: 'Unknown action' });
             }
         } catch (error) {
-            console.error('Error handling message:', error);
+            console.error('Error handling background message:', error);
             sendResponse({ error: error.message });
         }
     }
 
     async getStats() {
-        const result = await chrome.storage.local.get('stats');
-        return result.stats || {
-            totalShortsBlocked: 0,
-            totalTimeSaved: 0,
-            installDate: Date.now()
+        const result = await chrome.storage.local.get('shortsBlockerStats');
+        return result.shortsBlockerStats || {
+            shortsBlocked: 0,
+            shortsRedirected: 0,
+            startTime: Date.now()
         };
     }
 
@@ -146,20 +131,21 @@ class BackgroundManager {
         const currentStats = await this.getStats();
         const updatedStats = {
             ...currentStats,
-            totalShortsBlocked: (currentStats.totalShortsBlocked || 0) + (newStats.shortsBlocked || 0),
-            totalTimeSaved: (currentStats.totalTimeSaved || 0) + (newStats.timeSaved || 0),
-            lastUpdated: Date.now()
+            ...newStats,
+            lastSaved: Date.now()
         };
         
-        await chrome.storage.local.set({ stats: updatedStats });
+        await chrome.storage.local.set({ shortsBlockerStats: updatedStats, stats: updatedStats });
     }
 
     async getSettings() {
         const result = await chrome.storage.local.get('settings');
         return result.settings || {
             enabled: true,
+            redirectShorts: true,
+            hideShelves: true,
+            hideNav: true,
             showUI: true,
-            autoPause: false,
             notifications: true
         };
     }
@@ -171,12 +157,11 @@ class BackgroundManager {
     }
 
     showNotification(title, message) {
-        // Check if notifications are enabled
         this.getSettings().then(settings => {
-            if (settings.notifications) {
+            if (settings.notifications !== false) {
                 chrome.notifications.create({
                     type: 'basic',
-                    iconUrl: 'icons/icon.png',
+                    iconUrl: 'icons/icon-128.png',
                     title: title,
                     message: message
                 });
@@ -185,5 +170,5 @@ class BackgroundManager {
     }
 }
 
-// Initialize background manager
-new BackgroundManager(); 
+// Initialize background service worker instance
+new BackgroundManager();
